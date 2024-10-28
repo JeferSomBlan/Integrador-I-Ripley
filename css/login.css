@@ -1,0 +1,160 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f3f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 360px;
+}
+
+.login-container h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.login-container img {
+    width: 50px;
+    margin-bottom: 20px;
+}
+
+.login-container h2 {
+    color: #6a1b9a;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.login-container p {
+    color: #666666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 40px;
+    /* Altura uniforme */
+}
+
+.login-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666666;
+}
+
+.login-container .password-container {
+    position: relative;
+    /* Posicionamiento relativo para el icono */
+}
+
+.login-container .password-container i {
+    position: absolute;
+    right: 10px;
+    /* Espacio desde la derecha */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    /* Cambia el cursor al pasar sobre el icono */
+}
+
+.login-container a {
+    color: #666666;
+    font-size: 14px;
+    text-decoration: none;
+    display: block;
+    /* Para que ocupe todo el ancho */
+    margin-bottom: 20px;
+    /* Espacio entre enlaces */
+}
+
+.login-container button {
+    width: calc(100% - 20px);
+    /* Ancho total menos margen */
+    padding: 10px;
+    /* Espaciado interno */
+    border-radius: 4px;
+    /* Bordes redondeados */
+    font-size: 14px;
+    /* Tamaño de fuente */
+    cursor: pointer;
+    /* Cambia el cursor al pasar sobre el botón */
+    margin-bottom: 10px;
+    /* Espacio entre botones */
+    transition: background-color 0.3s, color 0.3s;
+    /* Transición suave para hover */
+}
+
+.login-container .btn-primary {
+    background-color: #6a1b9a;
+    /* Color del botón de iniciar sesión */
+    color: #ffffff;
+    /* Texto blanco */
+}
+
+.login-container .btn-primary:hover {
+    background-color: #5b2d8a;
+    /* Color más oscuro en hover */
+    color: #ffffff;
+    /* Mantener texto blanco */
+}
+
+.login-container .btn-google,
+.login-container .btn-apple {
+    background-color: #ffffff;
+    /* Fondo blanco */
+    color: #666666;
+    /* Texto gris */
+    border: 1px solid #cccccc;
+    /* Borde gris claro */
+    display: flex;
+    /* Flexbox para centrar contenido */
+    align-items: center;
+    /* Centrar verticalmente */
+    justify-content: center;
+    /* Centrar horizontalmente */
+}
+
+.login-container .btn-google:hover,
+.login-container .btn-apple:hover {
+    background-color: #f0f0f0;
+    /* Fondo gris claro en hover */
+    color: #333333;
+    /* Texto más oscuro en hover */
+}
+
+.login-container .btn-google img,
+.login-container .btn-apple img {
+    width: 20px;
+    /* Tamaño de los logos */
+    margin-right: 10px;
+    /* Espacio entre imagen y texto */
+}
+
+.login-container .create-account {
+    color: #6a1b9a;
+    /* Color del enlace de crear cuenta */
+    font-size: 14px;
+    /* Tamaño de fuente */
+}
+
+img.logo{
+    padding-top: 10px;
+}

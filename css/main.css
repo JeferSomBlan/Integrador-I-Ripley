@@ -1,0 +1,20 @@
+
+/* Espaciado para el contenedor de Bienvenido */
+.jumbotron {
+    margin-bottom: 40px; /* Espacio inferior para separar del contenido siguiente */
+}
+
+/* Espaciado para el botón en la sección de Bienvenido */
+.jumbotron .btn {
+    margin-top: 20px; /* Espacio superior para separar del texto */
+}
+
+/* Espaciado entre las tarjetas */
+.card {
+    margin-bottom: 20px; /* Espacio entre las tarjetas */
+}
+
+/* Espaciado en el footer */
+.footer {
+    padding: 20px 0; /* Espaciado en el footer */
+}
