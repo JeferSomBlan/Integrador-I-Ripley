@@ -5,19 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ripley - Tienda de Moda</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         body {
             background-color: #f8f9fa;
         }
         .navbar {
             background-color: #d4edda;
+            padding: 10px 15px;
         }
-        .navbar-brand {
-            color: #28a745 !important;
+        .navbar-brand img {
+            width: 50px;
         }
-        .btn-login {
-            background-color: #28a745;
-            color: white;
+        .form-inline .form-control {
+            border-radius: 20px;
+            width: 300px;
+        }
+        .btn-search {
+            color: #28a745;
+            border: 1px solid #28a745;
+            border-radius: 50%;
+            padding: 6px 10px;
+            margin-left: -35px;
+            background-color: #fff;
+        }
+        .navbar-nav .nav-item {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-nav .nav-link {
+            color: #28a745;
+            font-weight: 500;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-cart {
+            color: #28a745;
+            font-size: 1.4rem;
+            margin-left: 15px;
         }
         .hero {
             background-color: #28a745;
@@ -26,39 +52,66 @@
             text-align: center;
             margin-bottom: 2rem;
         }
-        .product-card {
-            margin: 15px 0;
-        }
-
-        .nav-link {
-            text-align: center;
-        }
     </style>
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light">
-        <a class="navbar-brand" href="#"><img src="img/logo/ripley_logo.png" alt="Logo" width="30"></a>
+        <!-- Logo -->
+        <a class="navbar-brand" href="#"><img src="img/logo/ripley_logo.png" alt="Logo"></a>
+        
+        <!-- Menu -->
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mr-auto">
+        
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <!-- Ingresar ubicación -->
+            <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.php">Inicio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Productos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contacto</a>
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-map-marker-alt"></i> Ingresar tu ubicación
+                    </a>
                 </li>
             </ul>
-            <form class="form-inline my-2 my-lg-0">
-                <!-- Cambiado el enlace del botón de iniciar sesión -->
-                <button type="button" class="btn btn-login my-2 my-sm-0" onclick="location.href='login.php'">Iniciar Sesión</button>
+            
+            <!-- Barra de búsqueda centrada -->
+            <form class="form-inline mx-auto">
+                <input class="form-control" type="search" placeholder="Buscar Productos" aria-label="Search">
+                <button class="btn btn-search" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
             </form>
+            
+            <!-- Íconos de usuario y carrito -->
+            <ul class="navbar-nav">
+                <!-- Botón o Dropdown de usuario -->
+                <?php if (isset($_SESSION['nombre'])): ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            ¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>!
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="mi_cuenta.php">Mi Cuenta</a>
+                            <a class="dropdown-item" href="mis_compras.php">Mis Compras</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="logout.php">Cerrar Sesión</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li class="nav-item">
+                        <button class="btn btn-login" onclick="location.href='login.php'">Iniciar Sesión</button>
+                    </li>
+                <?php endif; ?>
+                
+                <!-- Ícono de Carrito -->
+                <li class="nav-item">
+                    <a href="carrito.php" class="nav-link btn-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
     </nav>
 
