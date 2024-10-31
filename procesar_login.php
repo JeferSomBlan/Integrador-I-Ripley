@@ -3,8 +3,10 @@ session_start();
 include_once './util/conexionMysql.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verificar CAPTCHA
-    $captchaIngresado = intval($_POST['captcha']);
+    // Verificar CAPTCHA usando el valor en el campo oculto del formulario
+    $captchaIngresado = intval($_POST['captcha']); // valor enviado desde el campo oculto
+    
+    // Compara el valor del campo oculto con el CAPTCHA generado y almacenado en la sesión
     if ($captchaIngresado !== $_SESSION['captcha_result']) {
         // Si el CAPTCHA falla, redirigir al login con un mensaje de error
         echo "<script>alert('CAPTCHA incorrecto. Inténtalo de nuevo.'); window.location.href = 'login.php';</script>";
@@ -30,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $usuario['id'];
             $_SESSION['nombre'] = $usuario['nombre'];
             header('Location: ./intranet/intranet.php');
+            exit();
         } else {
             echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
         }
@@ -39,4 +42,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     desconectar();
 }
-?>
