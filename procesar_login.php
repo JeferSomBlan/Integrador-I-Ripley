@@ -2,6 +2,19 @@
 include_once './util/conexionMysql.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verificar reCAPTCHA
+    $recaptchaResponse = $_POST['g-recaptcha-response'];
+    $secretKey = 'YOUR_SECRET_KEY'; // Reemplaza 'YOUR_SECRET_KEY' con la clave secreta de tu reCAPTCHA
+    $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$recaptchaResponse");
+    $responseData = json_decode($verifyResponse);
+
+    if (!$responseData->success) {
+        // Si reCAPTCHA falla, redirigir al login con un mensaje de error
+        echo "<script>alert('Por favor, verifica el reCAPTCHA.'); window.location.href = 'login.php';</script>";
+        exit();
+    }
+
+    // Conectar a la base de datos y procesar el login
     conectar();
 
     $identificacion = htmlspecialchars($_POST['identificacion']);
