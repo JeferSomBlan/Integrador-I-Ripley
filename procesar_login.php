@@ -1,16 +1,13 @@
 <?php
+session_start();
 include_once './util/conexionMysql.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verificar reCAPTCHA
-    $recaptchaResponse = $_POST['g-recaptcha-response'];
-    $secretKey = 'YOUR_SECRET_KEY'; // Reemplaza 'YOUR_SECRET_KEY' con la clave secreta de tu reCAPTCHA
-    $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$recaptchaResponse");
-    $responseData = json_decode($verifyResponse);
-
-    if (!$responseData->success) {
-        // Si reCAPTCHA falla, redirigir al login con un mensaje de error
-        echo "<script>alert('Por favor, verifica el reCAPTCHA.'); window.location.href = 'login.php';</script>";
+    // Verificar CAPTCHA
+    $captchaIngresado = intval($_POST['captcha']);
+    if ($captchaIngresado !== $_SESSION['captcha_result']) {
+        // Si el CAPTCHA falla, redirigir al login con un mensaje de error
+        echo "<script>alert('CAPTCHA incorrecto. Inténtalo de nuevo.'); window.location.href = 'login.php';</script>";
         exit();
     }
 
@@ -30,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Verificar contraseña y clave
         if (password_verify($contrasena, $usuario['contrasena']) && password_verify($clave, $usuario['clave'])) {
-            session_start();
             $_SESSION['user_id'] = $usuario['id'];
             $_SESSION['nombre'] = $usuario['nombre'];
             header('Location: ./intranet/intranet.php');

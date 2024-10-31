@@ -1,8 +1,14 @@
 <?php
+session_start();
 $error = null;
 if (isset($_GET["e"])) {
     $error = "Credenciales incorrectas";
 }
+
+// Generar una operación matemática simple
+$numero1 = rand(1, 10);
+$numero2 = rand(1, 10);
+$_SESSION['captcha_result'] = $numero1 + $numero2; // Almacenar el resultado en la sesión
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -14,8 +20,6 @@ if (isset($_GET["e"])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/login.css">
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -23,9 +27,9 @@ if (isset($_GET["e"])) {
         <h1>Iniciar sesión</h1>
         <img alt="Logo" src="img/logo/ripley-com_logo.png" width="100%" />
         <h2>¡Bienvenido a Ripley.com!</h2>
-        <p>Ingresa tu usuario, contraseña y clave para iniciar sesión</p>
+        <p>Ingresa tu usuario, contraseña, clave y resuelve el CAPTCHA para iniciar sesión</p>
 
-        <form action="procesar_login.php" method="POST">
+        <form id="loginForm" action="procesar_login.php" method="POST">
             <!-- Campo de correo o DNI -->
             <input id="identificacion" name="identificacion" placeholder="Correo o DNI*" type="text" required />
 
@@ -36,13 +40,20 @@ if (isset($_GET["e"])) {
 
             <!-- Campo de clave -->
             <input id="clave" name="clave" placeholder="Clave*" type="text" required />
-            
+
+            <!-- CAPTCHA -->
+            <div>
+                <label for="captcha">¿Cuánto es <?php echo $numero1; ?> + <?php echo $numero2; ?>?</label>
+                <input type="text" id="captcha" name="captcha" required>
+            </div>
+
+            <!-- Mensaje de error -->
             <?php if ($error != null) : ?>
                 <p class="alert alert-danger"><?= $error ?></p>
             <?php endif; ?>
-            
+
             <a href="#">¿Olvidaste tu contraseña?</a>
-            <button type="submit" class="btn-primary">Iniciar sesión</button>
+            <button type="submit" class="btn-primary" id="submitButton">Iniciar sesión</button>
         </form>
 
         <button class="btn-google">
@@ -59,7 +70,6 @@ if (isset($_GET["e"])) {
         <a class="create-account" href="./ncryptar/registro.php">Crear cuenta</a>
     </div>
 
-
     <!-- Scripts -->
     <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js'></script>
@@ -67,11 +77,11 @@ if (isset($_GET["e"])) {
 
     <!-- Script para mostrar/ocultar contraseña -->
     <script>
-    document.getElementById('togglePassword').addEventListener('click', function () {
-        const passwordInput = document.getElementById('contrasena');
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.classList.toggle('fa-eye-slash');
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('contrasena');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye-slash');
         });
     </script>
 
