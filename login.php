@@ -104,7 +104,7 @@ list($numero1, $numero2) = generarCaptcha();
             <?php if ($error != null) : ?>
                 <p class="alert alert-danger"><?= $error ?></p>
             <?php endif; ?>
-            <a href="#">¿Olvidaste tu contraseña?</a>
+            <a href="./ncryptar/recuperar_contrasena.php">¿Olvidaste tu contraseña?</a>
             <button type="submit" class="btn-primary w-100" id="submitButton" disabled>Iniciar sesión</button>
         </form>
 
