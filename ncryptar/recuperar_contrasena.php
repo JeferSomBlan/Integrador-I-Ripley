@@ -46,38 +46,36 @@
             margin-top: 20px;
         }
 
-        .form-check {
-            margin-top: 15px;
-        }
-
         .form-section {
             margin-top: 40px;
             margin-bottom: 40px;
         }
-    </style>
     </style>
 </head>
 <body>
     <?php require_once '../fragmentos/nc_header.php'; ?>
     <div class="container mt-5">
         <h2 class="text-center">Recuperar Contraseña</h2>
-        <p class="text-center">Ingresa tu correo electrónico o DNI para recibir un enlace de recuperación.</p>
+        <p class="text-center">Ingresa tu correo electrónico para recibir un enlace de recuperación.</p>
         
         <form action="procesar_recuperacion.php" method="POST">
             <div class="mb-3">
-                <label for="identificacion" class="form-label">Correo o DNI:</label>
-                <input type="text" id="identificacion" name="identificacion" class="form-control" required>
+                <label for="correo" class="form-label">Correo Electrónico:</label>
+                <input type="email" id="correo" name="correo" class="form-control" placeholder="ejemplo@correo.com" required>
             </div>
             <div class="d-flex justify-content-center">
                 <button type="submit" class="btn btn-primary">Enviar Enlace de Recuperación</button>
             </div>
         </form>
     </div>
-    <footer class='footer text-center'>
+    <footer class='footer text-center mt-5'>
         <p><i class='bi bi-eye'></i> Ncrypt</p> 
         <p><a href='#' class='text-light'>Política de Privacidad</a> | 
            <a href='#' class='text-light'>Libro de Reclamaciones</a> | 
            <a href='#' class='text-light'>Portal de Estudiantes</a></p> 
     </footer>
+
+    <!-- Scripts de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
