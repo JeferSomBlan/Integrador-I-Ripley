@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Recuperar Contraseña - Ripley</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'>
     <style>
         body {
             margin: 0;
@@ -32,6 +33,7 @@
             background-color: #343a40;
             padding: 20px 0;
             color: #f8f9fa;
+            margin-top: 50px;
         }
 
         .form-label {
@@ -55,27 +57,66 @@
 <body>
     <?php require_once '../fragmentos/nc_header.php'; ?>
     <div class="container mt-5">
-        <h2 class="text-center">Recuperar Contraseña</h2>
-        <p class="text-center">Ingresa tu correo electrónico para recibir un enlace de recuperación.</p>
+        <section class="jumbotron text-center">
+            <h1 class="display-4">Recuperar Contraseña</h1>
+            <p class="lead">Ingresa tu correo electrónico para recibir un enlace de recuperación.</p>
+        </section>
         
-        <form action="procesar_recuperacion.php" method="POST">
+        <form id="recuperacionForm">
             <div class="mb-3">
                 <label for="correo" class="form-label">Correo Electrónico:</label>
                 <input type="email" id="correo" name="correo" class="form-control" placeholder="ejemplo@correo.com" required>
             </div>
             <div class="d-flex justify-content-center">
-                <button type="submit" class="btn btn-primary">Enviar Enlace de Recuperación</button>
+                <button type="submit" class="btn btn-primary" id="enviarBtn">Enviar Enlace de Recuperación</button>
             </div>
         </form>
     </div>
-    <footer class='footer text-center mt-5'>
-        <p><i class='bi bi-eye'></i> Ncrypt</p> 
-        <p><a href='#' class='text-light'>Política de Privacidad</a> | 
-           <a href='#' class='text-light'>Libro de Reclamaciones</a> | 
-           <a href='#' class='text-light'>Portal de Estudiantes</a></p> 
-    </footer>
 
-    <!-- Scripts de Bootstrap -->
+    <?php require_once '../fragmentos/nc_footer.php'; ?>
+
+    <!-- Modal de confirmación -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConfirmacionLabel">Enlace de Recuperación Enviado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Se ha enviado un correo con el enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap y JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('recuperacionForm').addEventListener('submit', function (e) {
+            e.preventDefault(); // Evita el envío normal del formulario
+
+            const formData = new FormData(this);
+
+            fetch('procesar_recuperacion.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+                    modal.show();
+                    setTimeout(() => {
+                        modal.hide();
+                        window.location.href = '../login.php';
+                    }, 5000);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>

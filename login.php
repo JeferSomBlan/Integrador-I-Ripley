@@ -90,7 +90,7 @@ list($numero1, $numero2) = generarCaptcha();
         <h1>Iniciar sesión</h1>
         <img alt="Logo" src="img/logo/ripley-com_logo.png" width="100%" />
         <h2>¡Bienvenido a Ripley.com!</h2>
-        <p>Ingresa tu usuario, contraseña, clave y resuelve el CAPTCHA para iniciar sesión</p>
+        <p>Ingresa tu usuario, contraseña y clave para iniciar sesión</p>
 
         <form id="loginForm" action="procesar_login.php" method="POST">
             <input id="identificacion" name="identificacion" placeholder="Correo o DNI*" type="text" required disabled />

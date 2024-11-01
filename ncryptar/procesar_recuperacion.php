@@ -8,54 +8,57 @@ require '../PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Verificar si el formulario fue enviado
+$response = ["success" => false, "message" => ""];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Obtener el correo desde el formulario
     $correo = htmlspecialchars($_POST['correo']);
 
-    // Conectar a la base de datos y verificar si el correo existe
     conectar();
     $sql = "SELECT * FROM usuarios WHERE correo = '$correo'";
     $resultado = consultar($sql);
 
     if ($resultado && count($resultado) === 1) {
         $usuario = $resultado[0];
-        $nuevoPassword = bin2hex(random_bytes(4)); // Genera una nueva contraseña aleatoria
-        $nuevoPasswordEncriptado = password_hash($nuevoPassword, PASSWORD_DEFAULT); // Encripta la contraseña
+        
+        $token = bin2hex(random_bytes(32));
+        $tokenExpiracion = date("Y-m-d H:i:s", strtotime('+1 hour'));
 
-        // Actualizar la contraseña en la base de datos
-        $updateSql = "UPDATE usuarios SET contrasena = '$nuevoPasswordEncriptado' WHERE correo = '$correo'";
-        ejecutar($updateSql);
+        $sql_update = "UPDATE usuarios SET token_recuperacion = '$token', token_expiracion = '$tokenExpiracion' WHERE correo = '$correo'";
+        ejecutar($sql_update);
 
-        // Configuración de PHPMailer para enviar el correo de recuperación
         $mail = new PHPMailer(true);
 
         try {
-            // Configuración del servidor SMTP
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com'; // Asegúrate de usar el host correcto
+            $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'jefersoncrack21@gmail.com'; // Reemplaza con tu correo
-            $mail->Password = 'lcybrrzzxygsxcpd'; // Reemplaza con tu contraseña de aplicación
+            $mail->Username = 'jefersoncrack21@gmail.com';
+            $mail->Password = 'lcybrrzzxygsxcpd';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
 
-            // Configuración del correo
             $mail->setFrom('jefersoncrack21@gmail.com', 'Ripley');
             $mail->addAddress($correo);
             $mail->isHTML(true);
             $mail->Subject = 'Recuperación de Contraseña - Ripley';
-            $mail->Body = "<p>Hola, {$usuario['nombre']}.</p><p>Tu nueva contraseña es: <strong>{$nuevoPassword}</strong></p><p>Te recomendamos cambiar esta contraseña después de iniciar sesión.</p>";
 
+            $urlRecuperacion = "http://localhost/ripley/ncryptar/restablecer_contrasena.php?token=$token";
+
+            $mail->Body = "<p>Hola, {$usuario['nombre']}.</p><p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p><p><a href='$urlRecuperacion'>Restablecer Contraseña</a></p><p>Este enlace es válido por 1 hora.</p>";
             $mail->send();
-            echo "<script>alert('Se ha enviado un correo con la nueva contraseña.'); window.location.href = '../login.php';</script>";
+
+            $response["success"] = true;
+            $response["message"] = "Correo de recuperación enviado";
         } catch (Exception $e) {
-            echo "<script>alert('Hubo un error al enviar el correo: {$mail->ErrorInfo}'); window.location.href = 'recuperar_contrasena.php';</script>";
+            $response["message"] = "Error al enviar el correo: {$mail->ErrorInfo}";
         }
     } else {
-        echo "<script>alert('No se encontró un usuario con ese correo.'); window.location.href = 'recuperar_contrasena.php';</script>";
+        $response["message"] = "No se encontró un usuario con ese correo.";
     }
 
     desconectar();
 }
+
+header('Content-Type: application/json');
+echo json_encode($response);
 ?>
