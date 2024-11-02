@@ -171,9 +171,9 @@
     </div>
 
     <!-- Modal Carrito -->
-    <div class="modal" id="carritoModal" tabindex="-1" role="dialog" style="position: fixed; top: 0; right: 0; width: 300px; height: 100vh; margin: 0;">
-        <div class="modal-dialog modal-dialog-scrollable" role="document" style="width: 100%; height: 100%;">
-            <div class="modal-content" style="height: 100%; display: flex; flex-direction: column;">
+    <div class="modal" id="carritoModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Tu Carrito</h5>
                     <button type="button" class="close" onclick="cerrarCarritoModal()">&times;</button>
@@ -181,9 +181,9 @@
                 <div class="modal-body" id="carritoContenido">
                     <p>Tu bolsa está vacía</p>
                 </div>
-                <div class="modal-footer" style="margin-top: auto;">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarCarritoModal()">Cerrar</button>
-                    <a href="carrito.php" class="btn btn-primary">Ir al carro</a>
+                    <button type="button" class="btn btn-primary" onclick="finalizarCompra()">Finalizar Compra</button>
                 </div>
             </div>
         </div>
@@ -196,119 +196,142 @@
     </footer>
 
     <!-- Scripts -->
-    <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js'></script> 
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js'></script> 
     <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js'></script> 
 
     <script>
-    // Función para cargar productos desde listar_productos.php
-// Función para cargar productos desde listar_productos.php
-function cargarProductos() {
-    fetch('listar_productos.php')
-        .then(response => response.json())
-        .then(productos => {
-            const container = document.getElementById('productos-container');
-            container.innerHTML = ''; // Limpiar contenido previo
-            productos.forEach(producto => {
-                const descuento = producto.descuento ? `<span class="badge badge-danger">-${producto.descuento}%</span>` : '';
-                container.innerHTML += `
-                    <div class="col-md-4 product-card">
-                        <div class="card">
-                            <img src="${producto.imagen_url}" class="card-img-top" alt="${producto.nombre}">
-                            <div class="card-body">
-                                <h5 class="card-title">${producto.nombre} ${descuento}</h5>
-                                <p class="card-text">${producto.descripcion}</p>
-                                <p class="card-text">S/ ${producto.precio}</p>
-                                <div class="mt-auto">
-                                    <button class="btn btn-primary btn-block" onclick="agregarAlCarrito(${producto.id})">Agregar al Carrito</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            // Guardar los productos en localStorage para usarlos en el carrito
-            localStorage.setItem('productos', JSON.stringify(productos));
-        })
-        .catch(error => console.error('Error al cargar productos:', error));
-}
-
-// Llamar a cargarProductos al cargar la página
-document.addEventListener('DOMContentLoaded', cargarProductos);
-
-// Función para agregar al carrito
-function agregarAlCarrito(idProducto) {
-    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-    
-    if (!carrito.includes(idProducto)) {
-        carrito.push(idProducto);
-    }
-    
-    localStorage.setItem('carrito', JSON.stringify(carrito));
-    actualizarIconoCarrito();
-    abrirCarritoModal(); // Abre el carrito al agregar
-}
-
-// Actualizar icono del carrito
-function actualizarIconoCarrito() {
-    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-    const cartIcon = document.querySelector('.btn-cart .badge');
-    if (cartIcon) {
-        cartIcon.remove();
-    }
-    if (carrito.length > 0) {
-        document.querySelector('.btn-cart').innerHTML += `<span class="badge badge-danger">${carrito.length}</span>`;
-    }
-}
-
-// Abrir el modal del carrito y mostrar su contenido
+// Abre el modal del carrito
 function abrirCarritoModal() {
-    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-    const carritoContenido = document.getElementById('carritoContenido');
-    const productos = JSON.parse(localStorage.getItem('productos')) || [];
-    
-    if (carrito.length === 0) {
-        carritoContenido.innerHTML = '<p>Tu bolsa está vacía</p>';
-    } else {
-        carritoContenido.innerHTML = '';
-        let total = 0;
-        
-        carrito.forEach(idProducto => {
-            const producto = productos.find(p => p.id === idProducto);
-            if (producto) {
-                carritoContenido.innerHTML += `
-                    <div class="cart-item d-flex justify-content-between">
-                        <span>${producto.nombre}</span>
-                        <span>S/ ${producto.precio}</span>
-                    </div>
-                `;
-                total += parseFloat(producto.precio);
-            } else {
-                console.warn("Producto no encontrado en la lista de productos:", idProducto);
-            }
-        });
-        
-        carritoContenido.innerHTML += `
-            <hr>
-            <div class="d-flex justify-content-between">
-                <strong>Total:</strong>
-                <strong>S/ ${total.toFixed(2)}</strong>
-            </div>
-        `;
-        console.log("Total calculado:", total);
-    }
-    
-    $('#carritoModal').modal('show');
+    actualizarCarritoModal(); // Actualiza el contenido del carrito antes de mostrarlo
+    $('#carritoModal').modal('show'); // Muestra el modal usando Bootstrap
 }
 
-
-// Cerrar el modal del carrito
+// Cierra el modal del carrito
 function cerrarCarritoModal() {
     $('#carritoModal').modal('hide');
 }
 
-// Inicializar icono del carrito al cargar la página
-document.addEventListener('DOMContentLoaded', actualizarIconoCarrito);
+// Función para cargar productos
+function cargarProductos() {
+    fetch('listar_productos.php')
+        .then(response => response.json())
+        .then(productos => {
+            if (productos.length > 0) {
+                localStorage.setItem('productosDisponibles', JSON.stringify(productos));
+                const container = document.getElementById('productos-container');
+                container.innerHTML = '';
+                productos.forEach(producto => {
+                    container.innerHTML += `
+                        <div class="col-md-4">
+                            <div class="card">
+                                <img src="${producto.imagen_url}" class="card-img-top" alt="${producto.nombre}">
+                                <div class="card-body">
+                                    <h5>${producto.nombre}</h5>
+                                    <p>${producto.descripcion}</p>
+                                    <p>Precio: S/ ${producto.precio}</p>
+                                    <button onclick="agregarAlCarrito(${producto.id})" class="btn btn-primary">Agregar al Carrito</button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                console.log("Productos disponibles cargados en localStorage:", productos);
+            } else {
+                console.error("No se encontraron productos para mostrar.");
+            }
+        })
+        .catch(error => console.error('Error al cargar productos:', error));
+}
+
+// Agregar producto al carrito
+function agregarAlCarrito(idProducto) {
+    const productosDisponibles = JSON.parse(localStorage.getItem('productosDisponibles')) || [];
+    const producto = productosDisponibles.find(p => Number(p.id) === Number(idProducto));
+
+    if (!producto) {
+        console.warn(`Producto con ID ${idProducto} no encontrado en productos disponibles.`);
+        return;
+    }
+
+    // Agregar o incrementar el producto en el carrito
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const index = carrito.findIndex(p => p.id === idProducto);
+
+    if (index > -1) {
+        carrito[index].cantidad += 1;
+    } else {
+        carrito.push({ id: idProducto, cantidad: 1 });
+    }
+
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    actualizarIconoCarrito();
+    abrirCarritoModal();
+}
+
+// Actualiza el icono del carrito con la cantidad total de productos
+function actualizarIconoCarrito() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const totalCantidad = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+    const cartIcon = document.querySelector('.btn-cart .badge');
+
+    if (cartIcon) {
+        cartIcon.textContent = totalCantidad;
+    } else if (totalCantidad > 0) {
+        document.querySelector('.btn-cart').innerHTML += `<span class="badge badge-danger">${totalCantidad}</span>`;
+    }
+}
+
+// Mostrar carrito en el modal
+function actualizarCarritoModal() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const productosDisponibles = JSON.parse(localStorage.getItem('productosDisponibles')) || [];
+    const carritoContenido = document.getElementById('carritoContenido');
+
+    if (carrito.length === 0) {
+        carritoContenido.innerHTML = '<p>Tu bolsa está vacía</p>';
+        return;
+    }
+
+    carritoContenido.innerHTML = '';
+    let total = 0;
+
+    carrito.forEach(item => {
+        const producto = productosDisponibles.find(p => Number(p.id) === Number(item.id));
+        if (producto) {
+            carritoContenido.innerHTML += `
+                <div class="d-flex justify-content-between">
+                    <span>${producto.nombre} x ${item.cantidad}</span>
+                    <span>S/ ${(producto.precio * item.cantidad).toFixed(2)}</span>
+                </div>`;
+            total += producto.precio * item.cantidad;
+        } else {
+            console.warn("Producto no encontrado en la lista de productos disponibles:", item.id);
+        }
+    });
+
+    carritoContenido.innerHTML += `<hr><div class="d-flex justify-content-between"><strong>Total:</strong> <strong>S/ ${total.toFixed(2)}</strong></div>`;
+}
+
+// Finalizar compra
+function finalizarCompra() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    if (carrito.length === 0) {
+        alert('El carrito está vacío');
+        return;
+    }
+
+    console.log("Compra finalizada:", carrito);
+    alert('Gracias por tu compra');
+    localStorage.removeItem('carrito');
+    actualizarCarritoModal();
+    actualizarIconoCarrito();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarProductos();
+    actualizarCarritoModal();
+    actualizarIconoCarrito();
+});
 
 </script>
 
