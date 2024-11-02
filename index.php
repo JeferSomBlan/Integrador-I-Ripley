@@ -52,6 +52,16 @@
             text-align: center;
             margin-bottom: 2rem;
         }
+        .product-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .product-card .card-text,
+        .product-card .card-title {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -107,8 +117,8 @@
                 
                 <!-- Ícono de Carrito -->
                 <li class="nav-item">
-                    <a href="carrito.php" class="nav-link btn-cart">
-                        <i class="fas fa-shopping-cart"></i>
+                    <a href="#" class="nav-link btn-cart" onclick="abrirCarritoModal()">
+                        <i class="fas fa-shopping-cart"></i><span class="badge badge-danger"></span>
                     </a>
                 </li>
             </ul>
@@ -155,45 +165,30 @@
     <!-- Productos -->
     <div class="container" id="productos">
         <h2 class="text-center my-4">Nuestros Productos</h2>
-        <div class="row">
-            <!-- Producto 1 -->
-            <div class="col-md-4 product-card">
-                <div class="card">
-                    <img src="img/producto/producto1.jpg" class="card-img-top" alt="Producto 1">
-                    <div class="card-body">
-                        <h5 class="card-title">Camisa de Moda</h5>
-                        <p class="card-text">$29.99</p>
-                        <a href="#" class="btn btn-primary">Agregar al Carrito</a>
-                    </div>
+        <div class="row" id="productos-container">
+            <!-- Productos cargados dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Modal Carrito -->
+    <div class="modal" id="carritoModal" tabindex="-1" role="dialog" style="position: fixed; top: 0; right: 0; width: 300px; height: 100vh; margin: 0;">
+        <div class="modal-dialog modal-dialog-scrollable" role="document" style="width: 100%; height: 100%;">
+            <div class="modal-content" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tu Carrito</h5>
+                    <button type="button" class="close" onclick="cerrarCarritoModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="carritoContenido">
+                    <p>Tu bolsa está vacía</p>
+                </div>
+                <div class="modal-footer" style="margin-top: auto;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarCarritoModal()">Cerrar</button>
+                    <a href="carrito.php" class="btn btn-primary">Ir al carro</a>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Producto 2 -->
-            <div class='col-md-4 product-card'>
-                <div class='card'>
-                    <img src='img/producto/producto2.jpg' class='card-img-top' alt='Producto 2'>
-                    <div class='card-body'>
-                        <h5 class='card-title'>Pantalones Elegantes</h5>
-                        <p class='card-text'>$39.99</p>
-                        <a href='#' class='btn btn-primary'>Agregar al Carrito</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Producto 3 -->
-            <div class='col-md-4 product-card'>
-                <div class='card'>
-                    <img src='img/producto/producto3.jpg' class='card-img-top' alt='Producto 3'>
-                    <div class='card-body'>
-                        <h5 class='card-title'>Vestido de Noche</h5>
-                        <p class='card-text'>$49.99</p>
-                        <a href='#' class='btn btn-primary'>Agregar al Carrito</a>
-                    </div>
-                </div>
-            </div>
-
-        </div> <!-- End row -->
-    </div> <!-- End container -->
 
     <!-- Footer -->
     <footer class='text-center py-4'>
@@ -205,5 +200,117 @@
     <script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js'></script> 
     <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js'></script> 
 
-</body> 
-</html> 
+    <script>
+    // Función para cargar productos desde listar_productos.php
+// Función para cargar productos desde listar_productos.php
+function cargarProductos() {
+    fetch('listar_productos.php')
+        .then(response => response.json())
+        .then(productos => {
+            const container = document.getElementById('productos-container');
+            container.innerHTML = ''; // Limpiar contenido previo
+            productos.forEach(producto => {
+                const descuento = producto.descuento ? `<span class="badge badge-danger">-${producto.descuento}%</span>` : '';
+                container.innerHTML += `
+                    <div class="col-md-4 product-card">
+                        <div class="card">
+                            <img src="${producto.imagen_url}" class="card-img-top" alt="${producto.nombre}">
+                            <div class="card-body">
+                                <h5 class="card-title">${producto.nombre} ${descuento}</h5>
+                                <p class="card-text">${producto.descripcion}</p>
+                                <p class="card-text">S/ ${producto.precio}</p>
+                                <div class="mt-auto">
+                                    <button class="btn btn-primary btn-block" onclick="agregarAlCarrito(${producto.id})">Agregar al Carrito</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            // Guardar los productos en localStorage para usarlos en el carrito
+            localStorage.setItem('productos', JSON.stringify(productos));
+        })
+        .catch(error => console.error('Error al cargar productos:', error));
+}
+
+// Llamar a cargarProductos al cargar la página
+document.addEventListener('DOMContentLoaded', cargarProductos);
+
+// Función para agregar al carrito
+function agregarAlCarrito(idProducto) {
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    
+    if (!carrito.includes(idProducto)) {
+        carrito.push(idProducto);
+    }
+    
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    actualizarIconoCarrito();
+    abrirCarritoModal(); // Abre el carrito al agregar
+}
+
+// Actualizar icono del carrito
+function actualizarIconoCarrito() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const cartIcon = document.querySelector('.btn-cart .badge');
+    if (cartIcon) {
+        cartIcon.remove();
+    }
+    if (carrito.length > 0) {
+        document.querySelector('.btn-cart').innerHTML += `<span class="badge badge-danger">${carrito.length}</span>`;
+    }
+}
+
+// Abrir el modal del carrito y mostrar su contenido
+function abrirCarritoModal() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const carritoContenido = document.getElementById('carritoContenido');
+    const productos = JSON.parse(localStorage.getItem('productos')) || [];
+    
+    if (carrito.length === 0) {
+        carritoContenido.innerHTML = '<p>Tu bolsa está vacía</p>';
+    } else {
+        carritoContenido.innerHTML = '';
+        let total = 0;
+        
+        carrito.forEach(idProducto => {
+            const producto = productos.find(p => p.id === idProducto);
+            if (producto) {
+                carritoContenido.innerHTML += `
+                    <div class="cart-item d-flex justify-content-between">
+                        <span>${producto.nombre}</span>
+                        <span>S/ ${producto.precio}</span>
+                    </div>
+                `;
+                total += parseFloat(producto.precio);
+            } else {
+                console.warn("Producto no encontrado en la lista de productos:", idProducto);
+            }
+        });
+        
+        carritoContenido.innerHTML += `
+            <hr>
+            <div class="d-flex justify-content-between">
+                <strong>Total:</strong>
+                <strong>S/ ${total.toFixed(2)}</strong>
+            </div>
+        `;
+        console.log("Total calculado:", total);
+    }
+    
+    $('#carritoModal').modal('show');
+}
+
+
+// Cerrar el modal del carrito
+function cerrarCarritoModal() {
+    $('#carritoModal').modal('hide');
+}
+
+// Inicializar icono del carrito al cargar la página
+document.addEventListener('DOMContentLoaded', actualizarIconoCarrito);
+
+</script>
+
+</body>
+</html>
