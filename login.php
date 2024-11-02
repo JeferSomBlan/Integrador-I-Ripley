@@ -25,6 +25,7 @@ list($numero1, $numero2) = generarCaptcha();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/login.css">
+    <link rel="icon" type="image/x-icon" href="./img/logo/favicon.ico">
     <style>
         .captcha-overlay {
             position: fixed;

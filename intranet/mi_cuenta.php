@@ -25,6 +25,7 @@ desconectar();
     <title>Mi Cuenta - Ripley</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../img/logo/favicon.ico">
     <style>
         body {
             background-color: #f8f9fa;
@@ -65,7 +66,7 @@ desconectar();
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark">
-    <a class="navbar-brand" href="#"><img src="img/logo/ripley_logo.png" alt="Logo" width="30"> Mi Cuenta</a>
+    <a class="navbar-brand" href="#"><img src="../img/logo/ripley_logo.png" alt="Logo" width="30"> Mi Cuenta</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -84,7 +85,7 @@ desconectar();
         <a href="mis_compras.php">Mis compras realizadas</a>
         <a href="#">Contáctanos</a>
         <a href="mi_cuenta.php" class="active">Mi perfil</a>
-        <a href="#">Mi contraseña</a>
+        <a href="mi_cuenta.php">Mi contraseña</a>
         <a href="#">Mis direcciones</a>
         <a href="#">Pagar Tarjeta Ripley</a>
         <a href="#">Canje millas Latam</a>
