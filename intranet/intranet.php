@@ -3,7 +3,6 @@ session_start();
 
 // Verificar si el usuario está autenticado
 if (!isset($_SESSION['user_id'])) {
-    // Si no está autenticado, redirigir al login
     header("Location: login.php");
     exit();
 }
@@ -13,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ripley - Tienda de Moda</title>
+    <title>Ripley - Intranet</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
@@ -62,68 +61,48 @@ if (!isset($_SESSION['user_id'])) {
             text-align: center;
             margin-bottom: 2rem;
         }
+        .product-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .product-card .card-text,
+        .product-card .card-title {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light">
-        <!-- Logo -->
         <a class="navbar-brand" href="#"><img src="../img/logo/ripley_logo.png" alt="Logo"></a>
-        
-        <!-- Menu -->
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
         <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
-            <!-- Ingresar ubicación -->
             <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-map-marker-alt"></i> Ingresar tu ubicación
-                    </a>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-map-marker-alt"></i> Ingresar tu ubicación</a></li>
             </ul>
-            
-            <!-- Barra de búsqueda centrada -->
-            <form class="form-inline mx-auto">
-                <input class="form-control" type="search" placeholder="Buscar Productos" aria-label="Search">
-                <button class="btn btn-search" type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-            
-            <!-- Íconos de usuario y carrito -->
             <ul class="navbar-nav">
-                <!-- Dropdown de usuario -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <?php echo isset($_SESSION['nombre']) ? "¡Hola, " . htmlspecialchars($_SESSION['nombre']) . "!" : "Iniciar Sesión"; ?>
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                        <?php echo "¡Hola, " . htmlspecialchars($_SESSION['nombre']) . "!"; ?>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                        <?php if (isset($_SESSION['nombre'])): ?>
-                            <a class="dropdown-item" href="mi_cuenta.php">Mi Cuenta</a>
-                            <a class="dropdown-item" href="mis_compras.php">Mis Compras</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="logout.php">Cerrar Sesión</a>
-                        <?php else: ?>
-                            <a class="dropdown-item" href="login.php">Iniciar Sesión</a>
-                            <a class="dropdown-item" href="registro.php">Registrarse</a>
-                        <?php endif; ?>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="mi_cuenta.php">Mi Cuenta</a>
+                        <a class="dropdown-item" href="mis_compras.php">Mis Compras</a>
+                        <a class="dropdown-item" href="logout.php">Cerrar Sesión</a>
                     </div>
                 </li>
-                
-                <!-- Ícono de Carrito -->
                 <li class="nav-item">
-                    <a href="carrito.php" class="nav-link btn-cart">
-                        <i class="fas fa-shopping-cart"></i>
+                    <a href="#" class="nav-link btn-cart" onclick="abrirCarritoModal()">
+                        <i class="fas fa-shopping-cart"></i><span class="badge badge-danger"></span>
                     </a>
                 </li>
             </ul>
         </div>
     </nav>
-
+    
+    <!-- Carrusel -->
     <div class="carousel-container">
         <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
             <ol class="carousel-indicators">
@@ -155,18 +134,41 @@ if (!isset($_SESSION['user_id'])) {
 
     <!-- Hero Section -->
     <div class="hero">
-        <h1>Bienvenido a Ripley</h1>
-        <p>Descubre la mejor moda al mejor precio.</p>
+        <h1>Bienvenido a Ripley - Intranet</h1>
+        <p>Gestión de productos y compras internas.</p>
         <a href="#productos" class="btn btn-light">Ver Productos</a>
     </div>
+
+    
 
     <!-- Productos -->
     <div class="container" id="productos">
         <h2 class="text-center my-4">Nuestros Productos</h2>
-        <div class="row">
-            <!-- Tarjetas de productos aquí -->
+        <div class="row" id="productos-container">
+            <!-- Productos cargados dinámicamente -->
         </div>
     </div>
+
+
+    <!-- Modal Carrito -->
+    <div class="modal" id="carritoModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tu Carrito</h5>
+                    <button type="button" class="close" onclick="cerrarCarritoModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="carritoContenido">
+                    <p>Tu bolsa está vacía</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarCarritoModal()">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="finalizarCompra()">Finalizar Compra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Footer -->
     <footer class="text-center py-4">
@@ -174,9 +176,9 @@ if (!isset($_SESSION['user_id'])) {
     </footer>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    <script src="../js/carrito.js"></script>
 </body>
 </html>
