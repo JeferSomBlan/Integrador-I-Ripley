@@ -10,9 +10,15 @@
     <link rel="icon" type="image/x-icon" href="../img/logo/favicon.ico">
     <style>
         body {
-            margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
@@ -32,10 +38,16 @@
             margin-bottom: 40px;
         }
 
-        .footer {
+        main {
+            flex: 1;
+        }
+
+        footer {
             background-color: #343a40;
-            padding: 20px 0;
             color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            width: 100%;
         }
 
         .form-label {

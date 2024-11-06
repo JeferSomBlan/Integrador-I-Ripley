@@ -17,7 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql_update = "UPDATE usuarios SET contrasena = '$nueva_contrasena', token_recuperacion = NULL, token_expiracion = NULL WHERE id = $user_id";
         ejecutar($sql_update);
 
-        echo "<script>alert('Contraseña actualizada correctamente.'); window.location.href = 'login.php';</script>";
+        // Enviar un mensaje de éxito en JavaScript
+        echo "<script>window.onload = function() { showSuccessModal(); }</script>";
     } else {
         echo "<script>alert('Token inválido o expirado.'); window.location.href = 'recuperar_contrasena.php';</script>";
     }
@@ -86,17 +87,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <!-- Header -->
     <?php require_once '../fragmentos/nc_header.php'; ?>
 
     <main class="container mt-4 form-section">
-        <!-- Contenedor para Título y Descripción -->
         <section class="jumbotron text-center mb-4">
             <h1 class="display-4">Restablecer Contraseña</h1>
             <p class="lead">Ingrese una nueva contraseña para su cuenta.</p>
         </section>
 
-        <!-- Formulario de Restablecimiento de Contraseña -->
         <form action="restablecer_contrasena.php" method="POST">
             <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
             <div class="mb-3">
@@ -108,10 +106,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </form>
     </main>
-    
+
     <?php require_once '../fragmentos/nc_footer.php'; ?>
 
-    <!-- Scripts de Bootstrap -->
+    <!-- Modal de éxito -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Contraseña Actualizada</h5>
+                </div>
+                <div class="modal-body">
+                    Tu contraseña ha sido cambiada correctamente. Esta página se cerrará en <span id="countdown">5</span> segundos.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap y JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showSuccessModal() {
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            startCountdown();
+        }
+
+        function startCountdown() {
+            let timeLeft = 5;
+            const countdownElement = document.getElementById('countdown');
+
+            const timer = setInterval(() => {
+                if (timeLeft <= 1) {
+                    clearInterval(timer);
+                    window.close();
+                } else {
+                    timeLeft--;
+                    countdownElement.textContent = timeLeft;
+                }
+            }, 1000);
+        }
+    </script>
 </body>
 </html>
