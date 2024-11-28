@@ -1,0 +1,48 @@
+body {
+    margin: 0; /* Sin margen en el body */
+    font-family: Arial, sans-serif; /* Fuente más profesional */
+    background-color: #f8f9fa; /* Color de fondo claro */
+}
+header {
+    background-color: #343a40; /* Fondo oscuro para el header */
+    padding: 15px 0; /* Espaciado en el header */
+}
+.navbar-light .navbar-nav .nav-link {
+    color: #f8f9fa; /* Color claro para las letras en el header */
+}
+.jumbotron {
+    background-color: #495057; /* Fondo oscurecido para la sección de bienvenida */
+    color: #f8f9fa; /* Color de texto claro en la sección de bienvenida */
+    padding: 40px; /* Espaciado interno en la jumbotron */
+    border-radius: 10px; /* Bordes redondeados */
+    margin-bottom: 40px;
+}
+.footer {
+    background-color: #343a40; /* Fondo oscuro para el footer */
+    padding: 20px 0; /* Espaciado en el footer */
+    color: #f8f9fa; /* Color de texto claro en el footer */
+}
+.form-label {
+    text-align: left;
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.form-check {
+    margin-top: 15px;
+}
+
+.form-section {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+.card {
+    margin: 20px; /* Espacio entre las tarjetas */
+    border-radius: 10px; /* Bordes redondeados para las tarjetas */
+}

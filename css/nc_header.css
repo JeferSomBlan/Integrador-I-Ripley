@@ -1,0 +1,17 @@
+header {
+    background-color: #343a40; /* Fondo oscuro */
+    padding: 15px 0;
+    color: #f8f9fa;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: #f8f9fa; /* Letras claras en el header */
+}
+
+.jumbotron {
+    background-color: #495057; /* Fondo para el jumbotron */
+    color: #f8f9fa; /* Texto claro */
+    padding: 40px;
+    border-radius: 10px;
+    margin-bottom: 40px;
+}

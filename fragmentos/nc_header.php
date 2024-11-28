@@ -16,7 +16,7 @@
                         <a class="nav-link" href="registro.php">Página de Registro</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="encriptar.php">Página de Encriptamiento</a>
+                        <a class="nav-link" href="recuperar_contrasena.php">Recuperar Contraseña</a>
                     </li>
                 </ul>
             </div>

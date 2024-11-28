@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +7,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'>
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="icon" type="image/x-icon" href="../img/logo/favicon.ico">
     <style>
         body {
-            margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
@@ -32,10 +38,16 @@
             margin-bottom: 40px;
         }
 
-        .footer {
+        main {
+            flex: 1;
+        }
+
+        footer {
             background-color: #343a40;
-            padding: 20px 0;
             color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            width: 100%;
         }
 
         .form-label {
@@ -58,6 +70,14 @@
             margin-top: 40px;
             margin-bottom: 40px;
         }
+
+        /* Estilo para el mensaje temporal de copiado */
+        #copyMessage {
+            display: none;
+            color: green;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -65,13 +85,11 @@
     <?php require_once '../fragmentos/nc_header.php'; ?>
 
     <main class="container mt-4 form-section">
-        <!-- Contenedor para Título y Descripción -->
         <section class="jumbotron text-center mb-4">
             <h1 class="display-4">Registro</h1>
             <p class="lead">Por favor, complete el siguiente formulario para registrarse.</p>
         </section>
 
-        <!-- Formulario de Registro -->
         <form id="registroForm" action="procesar_registro.php" method="POST">
             <div class="row mb-3">
                 <div class='col-md-6'>
@@ -109,14 +127,7 @@
         </form>
     </main>
 
-    <!-- Footer -->
-    <footer class='footer text-center'>
-        <p><i class='bi bi-eye'></i> Ncrypt</p>
-        <p><a href='#' class='text-light'>Política de Privacidad</a> |
-            <a href='#' class='text-light'>Libro de Reclamaciones</a> |
-            <a href='#' class='text-light'>Portal de Estudiantes</a>
-        </p>
-    </footer>
+    <?php require_once '../fragmentos/nc_footer.php'; ?>
 
     <!-- Modal para mostrar la clave generada -->
     <div class="modal fade" id="modalClave" tabindex="-1" aria-labelledby="modalClaveLabel" aria-hidden="true">
@@ -124,19 +135,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalClaveLabel">Clave Generada</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="redirectLogin()"></button>
                 </div>
                 <div class="modal-body">
                     <p>Tu clave de acceso es: <strong id="claveGenerada"></strong></p>
                     <button class="btn btn-outline-primary" onclick="copiarClave()">Copiar Clave</button>
+                    <div id="copyMessage">Clave copiada correctamente</div> <!-- Mensaje temporal -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="redirectLogin()">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
-
 
     <!-- Scripts de Bootstrap -->
     <script src='https://code.jquery.com/jquery-3.2.1.slim.min.js'></script>
@@ -159,7 +170,14 @@
                 if (data.success) {
                     // Mostrar la clave en el modal
                     document.getElementById('claveGenerada').textContent = data.clave;
-                    new bootstrap.Modal(document.getElementById('modalClave')).show();
+                    const modal = new bootstrap.Modal(document.getElementById('modalClave'));
+                    modal.show();
+
+                    // Redirigir al login después de cerrar el modal
+                    const cerrarBtn = document.querySelector('.modal-footer .btn-secondary');
+                    cerrarBtn.addEventListener('click', () => {
+                        window.location.href = '/ripley/login.php'; // Ruta absoluta al login
+                    });
                 } else {
                     alert(data.message);
                 }
@@ -167,15 +185,21 @@
             .catch(error => console.error('Error:', error));
         });
 
-        // Función para copiar la clave al portapapeles
+        // Función para copiar la clave al portapapeles con mensaje temporal
         function copiarClave() {
             const clave = document.getElementById('claveGenerada').textContent;
             navigator.clipboard.writeText(clave).then(() => {
-                alert('Clave copiada al portapapeles');
+                const mensaje = document.createElement('p');
+                mensaje.textContent = 'Clave copiada al portapapeles';
+                mensaje.className = 'text-success mt-2';
+                document.querySelector('.modal-body').appendChild(mensaje);
+                
+                // Quitar el mensaje después de 2 segundos
+                setTimeout(() => {
+                    mensaje.remove();
+                }, 2000);
             });
         }
     </script>
-
 </body>
-
 </html>
