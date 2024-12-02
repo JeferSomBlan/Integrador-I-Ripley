@@ -97,6 +97,13 @@ desconectar();
         <div class="profile-container">
             <h4>Perfil</h4>
             <p>Aquí encontrarás tus datos personales</p>
+
+            <?php if (isset($_GET['actualizado']) && $_GET['actualizado'] == 1): ?>
+                <div class="alert alert-success" role="alert">
+                    ¡Perfil actualizado con éxito!
+                </div>
+            <?php endif; ?>
+
             <form action="actualizar_perfil.php" method="POST">
                 <div class="form-row">
                     <div class="form-group col-md-6">
