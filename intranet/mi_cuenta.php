@@ -12,8 +12,20 @@ include_once '../util/conexionMysql.php';
 // Conectar a la base de datos y obtener la información del usuario
 $user_id = $_SESSION['user_id'];
 conectar();
-$sql = "SELECT * FROM usuarios WHERE id = $user_id";
-$usuario = consultar($sql)[0];
+
+// Usar una consulta preparada para evitar inyección SQL
+$sql = "SELECT * FROM usuarios WHERE id = ?";
+if ($stmt = mysqli_prepare($cnx, $sql)) {
+    mysqli_stmt_bind_param($stmt, "i", $user_id); // 'i' para enteros
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $usuario = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+} else {
+    echo "Error al obtener datos del usuario.";
+    exit();
+}
+
 desconectar();
 ?>
 
