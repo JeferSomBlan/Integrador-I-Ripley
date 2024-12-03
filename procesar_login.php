@@ -11,31 +11,42 @@ use PHPMailer\PHPMailer\Exception;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Conectar a la base de datos y procesar el login
     conectar();
+
+    // Escapar entradas para evitar XSS
     $identificacion = htmlspecialchars($_POST['identificacion']);
-    $contrasena = htmlspecialchars($_POST['contrasena']);
-    $clave = htmlspecialchars($_POST['clave']);
+    $contrasena = $_POST['contrasena'];  // Contraseña ingresada por el usuario
+    $clave = $_POST['clave'];  // Clave adicional si es necesario
 
-    $sql = "SELECT * FROM usuarios WHERE correo = '$identificacion' OR dni = '$identificacion'";
-    $usuario = consultar($sql);
+    // Evitar inyecciones SQL usando consultas preparadas
+    $sql = "SELECT * FROM usuarios WHERE correo = ? OR dni = ?";
+    if ($stmt = mysqli_prepare($cnx, $sql)) {
+        // Vincular los parámetros para prevenir inyecciones SQL
+        mysqli_stmt_bind_param($stmt, "ss", $identificacion, $identificacion);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
 
-    if ($usuario && count($usuario) == 1) {
-        $usuario = $usuario[0];
+        if ($usuario = mysqli_fetch_assoc($result)) {
+            // Verificar las contraseñas usando password_verify()
+            if (password_verify($contrasena, $usuario['contrasena']) && password_verify($clave, $usuario['clave'])) {
+                // Almacenar información relevante en la sesión
+                $_SESSION['user_id'] = $usuario['id'];
+                $_SESSION['nombre'] = $usuario['nombre'];
+                $_SESSION['correo'] = $usuario['correo']; // Para reenviar OTP en verificar_otp.php
 
-        if (password_verify($contrasena, $usuario['contrasena']) && password_verify($clave, $usuario['clave'])) {
-            // Almacenar información relevante en la sesión
-            $_SESSION['user_id'] = $usuario['id'];
-            $_SESSION['nombre'] = $usuario['nombre'];
-            $_SESSION['correo'] = $usuario['correo']; // Para reenviar OTP en verificar_otp.php
-
-            // Generar y enviar OTP
-            generarYEnviarOTP($usuario['correo'], $usuario['nombre']);
-            header('Location: verificar_otp.php');
-            exit();
+                // Generar y enviar OTP
+                generarYEnviarOTP($usuario['correo'], $usuario['nombre']);
+                header('Location: verificar_otp.php');
+                exit();
+            } else {
+                echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
+            }
         } else {
-            echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
+            echo "<script>alert('Usuario no encontrado'); window.location.href = 'login.php';</script>";
         }
+
+        mysqli_stmt_close($stmt);
     } else {
-        echo "<script>alert('Usuario no encontrado'); window.location.href = 'login.php';</script>";
+        echo "<script>alert('Error en la consulta a la base de datos'); window.location.href = 'login.php';</script>";
     }
 
     desconectar();
