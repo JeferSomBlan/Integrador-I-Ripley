@@ -8,7 +8,13 @@ require './PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+// Verificar si la solicitud es POST y si el token CSRF es válido
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verificar el token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Error: CSRF token inválido');
+    }
+
     // Conectar a la base de datos y procesar el login
     conectar();
 

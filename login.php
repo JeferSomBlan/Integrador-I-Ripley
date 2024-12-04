@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// Generar un token CSRF si no existe
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Genera un token único
+}
+
 $error = null;
 if (isset($_GET["e"])) {
     $error = "Credenciales incorrectas";
@@ -27,15 +33,20 @@ if (isset($_GET["e"])) {
         <p>Ingresa tu usuario, contraseña y clave para iniciar sesión</p>
 
         <form id="loginForm" action="procesar_login.php" method="POST">
+            <!-- Agregar token CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>" />
+            
             <input id="identificacion" name="identificacion" placeholder="Correo o DNI*" type="text" required />
             <div class="password-container">
                 <input id="contrasena" name="contrasena" placeholder="Contraseña*" type="password" required />
                 <i class="fas fa-eye" id="togglePassword"></i>
             </div>
             <input id="clave" name="clave" placeholder="Clave*" type="text" required />
+            
             <?php if ($error != null) : ?>
                 <p class="alert alert-danger"><?= $error ?></p>
             <?php endif; ?>
+            
             <a href="./ncryptar/recuperar_contrasena.php">¿Olvidaste tu contraseña?</a>
             <button type="submit" class="btn-primary w-100">Iniciar sesión</button>
         </form>
