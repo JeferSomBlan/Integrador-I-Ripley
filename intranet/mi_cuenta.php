@@ -1,6 +1,24 @@
 <?php
 session_start();
 
+// Incluir Monolog
+require_once '../vendor/autoload.php';
+
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+// Crear el logger
+$log = new Logger('perfil_log');
+$logDir = __DIR__ . '/logs';
+
+// Asegurarse de que el directorio de logs exista
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true); // Crear la carpeta si no existe
+}
+
+// Configurar el handler para escribir los logs de acceso
+$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::DEBUG)); // Registrar todos los mensajes (INFO, WARNING, ERROR)
+
 // Verificar si el usuario está autenticado
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -21,7 +39,28 @@ if ($stmt = mysqli_prepare($cnx, $sql)) {
     $result = mysqli_stmt_get_result($stmt);
     $usuario = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
+
+    // Verificar si el usuario se cargó correctamente
+    if ($usuario) {
+        // Registrar el evento de carga de perfil
+        $log->info('Perfil cargado exitosamente', [
+            'user_id' => $user_id,
+            'nombre' => $usuario['nombre'],
+            'correo' => $usuario['correo']
+        ]);
+    } else {
+        // Registrar el error si no se encuentra el usuario
+        $log->error('Usuario no encontrado', [
+            'user_id' => $user_id
+        ]);
+    }
+
 } else {
+    // Registrar el error si no se puede obtener la información del usuario
+    $log->error('Error al obtener datos del usuario', [
+        'user_id' => $user_id,
+        'error_message' => 'Error en la consulta SQL'
+    ]);
     echo "Error al obtener datos del usuario.";
     exit();
 }
