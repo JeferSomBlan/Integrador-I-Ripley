@@ -1,6 +1,0 @@
-[2024-12-05T19:52:00.585807+01:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 19:52:00"} []
-[2024-12-05T19:53:04.136010+01:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 19:53:04"} []
-[2024-12-05T19:54:47.618595+01:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 19:54:47"} []
-[2024-12-05T19:58:29.168135+01:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 19:58:29"} []
-[2024-12-05T19:59:49.080342+01:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 19:59:49"} []
-[2024-12-05T14:02:56.161551-05:00] logout_log.INFO: Cierre de sesión realizado {"usuario":"desconocido","hora":"2024-12-05 14:02:56"} []
