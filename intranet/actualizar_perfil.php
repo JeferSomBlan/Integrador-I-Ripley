@@ -13,16 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
     
     // Limpiar y sanitizar las entradas
-    $nombre = trim(htmlspecialchars($_POST['nombre']));
-    $telefono_raw = trim(htmlspecialchars($_POST['telefono'])); // Obtener el teléfono sin cambios
+    $nombre = trim(htmlspecialchars($_POST['nombre'], ENT_QUOTES, 'UTF-8')); // Codificar las entradas para prevenir XSS
+    $telefono_raw = trim(htmlspecialchars($_POST['telefono'], ENT_QUOTES, 'UTF-8')); // Sanitizar teléfono
     $telefono = preg_replace('/\D/', '', $telefono_raw); // Eliminar cualquier carácter no numérico
-    $direccion = trim(htmlspecialchars($_POST['direccion']));
-    $correo = trim(htmlspecialchars($_POST['email']));
-
-    // Debug: Mostrar el valor del teléfono antes de la validación
-    echo "Telefono original: " . $telefono_raw . "<br>"; // Ver qué valor recibe
-    echo "Telefono procesado: " . $telefono . "<br>"; // Ver qué valor está procesando
-    echo "Tipo de telefono procesado: " . gettype($telefono) . "<br>"; // Verificar tipo de variable
+    $direccion = trim(htmlspecialchars($_POST['direccion'], ENT_QUOTES, 'UTF-8')); // Codificar dirección
+    $correo = trim(htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8')); // Codificar correo
 
     // Validación simple de formato de correo
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
@@ -74,5 +69,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     desconectar();
 
     exit();
+}
+
+// Si la petición es GET (para mostrar el formulario con los datos actuales del usuario)
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Conectar a la base de datos
+    conectar();
+
+    // Consulta para obtener los datos del usuario
+    $sql_select = "SELECT nombre, telefono, direccion, correo FROM usuarios WHERE id = ?";
+    if ($stmt = mysqli_prepare($cnx, $sql_select)) {
+        mysqli_stmt_bind_param($stmt, "i", $_SESSION['user_id']);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $nombre, $telefono, $direccion, $correo);
+        mysqli_stmt_fetch($stmt);
+
+        // Codificar los datos para prevenir XSS al mostrarlos en el formulario
+        $nombre = htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8');
+        $telefono = htmlspecialchars($telefono, ENT_QUOTES, 'UTF-8');
+        $direccion = htmlspecialchars($direccion, ENT_QUOTES, 'UTF-8');
+        $correo = htmlspecialchars($correo, ENT_QUOTES, 'UTF-8');
+
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error al obtener los datos del usuario.";
+    }
+
+    // Desconectar de la base de datos
+    desconectar();
 }
 ?>

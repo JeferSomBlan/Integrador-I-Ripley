@@ -1,0 +1,17 @@
+{
+    "name": "51956/ripley",
+    "autoload": {
+        "psr-4": {
+            "51956\\Ripley\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jeferson Aguilar A",
+            "email": "jefersoncrack21@gmail.com"
+        }
+    ],
+    "require": {
+        "monolog/monolog": "^3.8"
+    }
+}

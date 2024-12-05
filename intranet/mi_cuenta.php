@@ -83,7 +83,7 @@ desconectar();
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <span class="navbar-text mr-3">¡Hola, <?php echo htmlspecialchars($usuario['nombre']); ?>!</span>
+        <span class="navbar-text mr-3">¡Hola, <?php echo htmlspecialchars($usuario['nombre'], ENT_QUOTES, 'UTF-8'); ?>!</span>
         <a href="logout.php" class="btn btn-outline-light"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
     </div>
 </nav>
@@ -92,7 +92,7 @@ desconectar();
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="profile-header text-center">
-            <span><?php echo strtoupper(substr($usuario['nombre'], 0, 1)); ?></span>
+            <span><?php echo strtoupper(substr(htmlspecialchars($usuario['nombre'], ENT_QUOTES, 'UTF-8'), 0, 1)); ?></span>
         </div>
         <a href="mis_compras.php">Mis compras realizadas</a>
         <a href="#">Contáctanos</a>
@@ -120,26 +120,26 @@ desconectar();
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($usuario['nombre']); ?>" required>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($usuario['nombre'], ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="dni">DNI</label>
-                        <input type="text" class="form-control" id="dni" value="<?php echo htmlspecialchars($usuario['dni']); ?>" readonly>
+                        <input type="text" class="form-control" id="dni" value="<?php echo htmlspecialchars($usuario['dni'], ENT_QUOTES, 'UTF-8'); ?>" readonly>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($usuario['correo']); ?>" required>
+                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($usuario['correo'], ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="telefono">Teléfono</label>
-                        <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono']); ?>" required>
+                        <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono'], ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="direccion">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($usuario['direccion']); ?>">
+                    <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($usuario['direccion'], ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
             </form>

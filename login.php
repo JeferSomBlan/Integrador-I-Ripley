@@ -1,14 +1,41 @@
 <?php
 session_start();
 
+// Incluir autoload de Composer para Monolog
+require_once 'vendor/autoload.php';
+
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+// Crear el logger
+$log = new Logger('login_log');
+
+// Asegurarse de que el directorio de logs exista
+$logDir = __DIR__ . '/logs';
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true); // Crear la carpeta si no existe
+}
+
+// Configurar el handler para escribir los logs de acceso
+$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::INFO));
+
 // Generar un token CSRF si no existe
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Genera un token único
 }
 
+// Registrar el acceso a la página de login
+$log->info('Acceso a la página de login', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
+
 $error = null;
 if (isset($_GET["e"])) {
     $error = "Credenciales incorrectas";
+    // Log de error en el login
+    $log->warning('Intento de login fallido', [
+        'ip' => $_SERVER['REMOTE_ADDR'], 
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+        'error_message' => $error
+    ]);
 }
 ?>
 <!DOCTYPE html>

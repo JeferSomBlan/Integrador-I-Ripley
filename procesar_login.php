@@ -1,9 +1,21 @@
-<?php
+<?php 
 session_start();
 include_once './util/conexionMysql.php';
 require './PHPMailer/src/PHPMailer.php';
 require './PHPMailer/src/SMTP.php';
 require './PHPMailer/src/Exception.php';
+
+// Al inicio de tu archivo, configura el logger
+require_once 'vendor/autoload.php';
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+$log = new Logger('login_log');
+$logDir = __DIR__ . '/logs';
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true);
+}
+$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::WARNING));
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -12,6 +24,7 @@ use PHPMailer\PHPMailer\Exception;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verificar el token CSRF
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $log->error('Error: CSRF token inválido', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
         die('Error: CSRF token inválido');
     }
 
@@ -44,14 +57,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: verificar_otp.php');
                 exit();
             } else {
+                // Log de error cuando las credenciales son incorrectas
+                $log->warning('Credenciales incorrectas', [
+                    'ip' => $_SERVER['REMOTE_ADDR'], 
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                    'identificacion' => $identificacion
+                ]);
                 echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
             }
         } else {
+            // Log de error cuando el usuario no es encontrado
+            $log->warning('Usuario no encontrado', [
+                'ip' => $_SERVER['REMOTE_ADDR'], 
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'identificacion' => $identificacion
+            ]);
             echo "<script>alert('Usuario no encontrado'); window.location.href = 'login.php';</script>";
         }
 
         mysqli_stmt_close($stmt);
     } else {
+        // Log de error cuando la consulta falla
+        $log->error('Error en la consulta a la base de datos', [
+            'ip' => $_SERVER['REMOTE_ADDR'], 
+            'user_agent' => $_SERVER['HTTP_USER_AGENT']
+        ]);
         echo "<script>alert('Error en la consulta a la base de datos'); window.location.href = 'login.php';</script>";
     }
 
