@@ -12,6 +12,8 @@
         }
     ],
     "require": {
-        "monolog/monolog": "^3.8"
+        "monolog/monolog": "^3.8",
+        "sentry/sdk": "^4.0",
+        "sentry/sentry": "^4.10"
     }
 }
