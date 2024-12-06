@@ -5,10 +5,15 @@ require './PHPMailer/src/PHPMailer.php';
 require './PHPMailer/src/SMTP.php';
 require './PHPMailer/src/Exception.php';
 
+// Incluir Sentry
+require_once './vendor/autoload.php';
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']); 
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if (!isset($_SESSION['user_id'])) {
+    \Sentry\captureMessage("Acceso no autorizado a verificar OTP", \Sentry\Severity::warning());
     header("Location: login.php");
     exit();
 }
@@ -18,6 +23,7 @@ $errorMensaje = "";
 // Verificar si se establecieron las variables de sesión necesarias
 if (!isset($_SESSION['otp']) || !isset($_SESSION['otp_expiration'])) {
     $errorMensaje = "No se ha generado un código OTP o ha expirado. Por favor, inicia sesión de nuevo.";
+    \Sentry\captureMessage("Error en OTP: Código OTP no generado o expirado.", \Sentry\Severity::error());
 }
 
 // Reenviar OTP
@@ -54,10 +60,12 @@ if (isset($_POST['reenviar_otp'])) {
         ";
 
         $mail->send();
+        \Sentry\captureMessage("OTP reenviado exitosamente al correo: {$_SESSION['correo']}", \Sentry\Severity::info());
         header("Location: verificar_otp.php?reenviado=1");
         exit();
     } catch (Exception $e) {
         $errorMensaje = "Error al reenviar el código OTP.";
+        \Sentry\captureException($e);
     }
 }
 
@@ -67,10 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['reenviar_otp'])) {
     if ($otpIngresado === $_SESSION['otp'] && time() < $_SESSION['otp_expiration']) {
         unset($_SESSION['otp']);
         unset($_SESSION['otp_expiration']);
+        \Sentry\captureMessage("Usuario {$_SESSION['user_id']} verificó OTP correctamente.", \Sentry\Severity::info());
         header("Location: ./intranet/intranet.php");
         exit();
     } else {
         $errorMensaje = "Código OTP incorrecto o expirado.";
+        \Sentry\captureMessage("Error de verificación OTP para el usuario {$_SESSION['user_id']}. Código incorrecto o expirado.", \Sentry\Severity::warning());
     }
 }
 ?>
