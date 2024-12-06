@@ -122,6 +122,28 @@ if (isset($_GET["e"])) {
             font-size: 0.9rem;
             margin-top: 10px;
         }
+        /* Resaltar los campos inválidos con un borde sutil */
+        input.is-invalid {
+            border-color: #ff8800; /* Color naranja suave */
+            background-color: #fff8e6; /* Fondo ligeramente amarillo */
+            animation: shake 0.3s ease-in-out; /* Añade una animación al invalidarse */
+        }
+
+        /* Placeholder de los campos inválidos en color naranja */
+        input.is-invalid::placeholder {
+            color: #ff8800; /* Color del texto del placeholder */
+            font-style: italic; /* Estilo cursivo para indicar error */
+        }
+
+        /* Animación de sacudida */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
     </style>
 </head>
 
@@ -202,31 +224,74 @@ if (isset($_GET["e"])) {
         document.getElementById('enviarBtn').addEventListener('click', function (e) {
             e.preventDefault(); // Evita el envío normal del formulario
 
-            const formData = new FormData(document.getElementById('registroForm'));
+            const form = document.getElementById('registroForm');
+            const campos = form.querySelectorAll('input[required]'); // Todos los campos requeridos
+            let formularioValido = true;
 
-            // Enviar datos al servidor
-            fetch('procesar_registro.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Mostrar la clave en el modal
-                    document.getElementById('claveGenerada').textContent = data.clave;
-                    const modal = new bootstrap.Modal(document.getElementById('modalClave'));
-                    modal.show();
-
-                    // Redirigir al login después de cerrar el modal
-                    const cerrarBtn = document.querySelector('.modal-footer .btn-secondary');
-                    cerrarBtn.addEventListener('click', () => {
-                        window.location.href = '/ripley/login.php'; // Ruta absoluta al login
-                    });
+            // Validar todos los campos requeridos
+            campos.forEach(campo => {
+                if (!campo.value.trim()) {
+                    // Si el campo está vacío, cambia el placeholder y marca como inválido
+                    campo.placeholder = `Completa el ${campo.getAttribute('id')}`;
+                    campo.classList.add('is-invalid');
+                    formularioValido = false;
                 } else {
-                    alert(data.message);
+                    // Si el campo tiene valor, quita cualquier marca de error
+                    campo.classList.remove('is-invalid');
+                    campo.placeholder = `Ingrese su ${campo.getAttribute('id')}`;
                 }
-            })
-            .catch(error => console.error('Error:', error));
+
+                // Validación específica para DNI (8 dígitos)
+                if (campo.id === 'dni' && campo.value.trim() && !/^\d{8}$/.test(campo.value)) {
+                    campo.value = ''; // Limpiar el valor incorrecto
+                    campo.placeholder = 'Completa el DNI de 8 dígitos';
+                    campo.classList.add('is-invalid');
+                    formularioValido = false;
+                }
+
+                // Validación específica para teléfono (9 dígitos)
+                if (campo.id === 'telefono' && campo.value.trim() && !/^\d{9}$/.test(campo.value)) {
+                    campo.value = ''; // Limpiar el valor incorrecto
+                    campo.placeholder = 'Completa el teléfono de 9 dígitos';
+                    campo.classList.add('is-invalid');
+                    formularioValido = false;
+                }
+            });
+
+            if (formularioValido) {
+                // Si todos los campos son válidos, envía el formulario al servidor
+                const formData = new FormData(form);
+
+                fetch('procesar_registro.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Mostrar la clave en el modal
+                            document.getElementById('claveGenerada').textContent = data.clave;
+                            const modal = new bootstrap.Modal(document.getElementById('modalClave'));
+                            modal.show();
+
+                            // Redirigir al login después de cerrar el modal
+                            const cerrarBtn = document.querySelector('.modal-footer .btn-secondary');
+                            cerrarBtn.addEventListener('click', () => {
+                                window.location.href = '/ripley/login.php'; // Ruta absoluta al login
+                            });
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+
+        // Eliminar el estado "inválido" al enfocar un campo
+        document.querySelectorAll('input[required]').forEach(campo => {
+            campo.addEventListener('focus', () => {
+                campo.classList.remove('is-invalid');
+            });
         });
 
         // Función para copiar la clave al portapapeles con mensaje temporal
