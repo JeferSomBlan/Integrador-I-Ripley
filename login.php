@@ -1,13 +1,16 @@
 <?php
 session_start();
 
-// Incluir autoload de Composer para Monolog
+// Incluir el autoload de Composer
 require_once 'vendor/autoload.php';
+
+// Iniciar Sentry
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']); // Usa tu DSN
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-// Crear el logger
+// Crear el logger de Monolog
 $log = new Logger('login_log');
 
 // Asegurarse de que el directorio de logs exista
@@ -27,6 +30,9 @@ if (empty($_SESSION['csrf_token'])) {
 // Registrar el acceso a la página de login
 $log->info('Acceso a la página de login', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
 
+// Registrar el acceso a Sentry
+\Sentry\captureMessage("Acceso a la página de login", \Sentry\Severity::info());
+
 $error = null;
 if (isset($_GET["e"])) {
     $error = "Credenciales incorrectas";
@@ -36,6 +42,9 @@ if (isset($_GET["e"])) {
         'user_agent' => $_SERVER['HTTP_USER_AGENT'],
         'error_message' => $error
     ]);
+    
+    // Registrar el error en Sentry
+    \Sentry\captureException(new Exception("Intento de login fallido: " . $error));
 }
 ?>
 <!DOCTYPE html>

@@ -1,3 +1,47 @@
+<?php
+session_start();
+
+// Incluir el autoload de Composer
+require_once '../vendor/autoload.php';
+
+// Iniciar Sentry
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']); // Usa tu DSN
+
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+// Crear el logger de Monolog
+$log = new Logger('registro_log');
+
+// Asegurarse de que el directorio de logs exista
+$logDir = __DIR__ . '/../logs';
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true); // Crear la carpeta si no existe
+}
+
+// Configurar el handler para escribir los logs de acceso
+$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::INFO));
+
+// Registrar el acceso a la página de registro
+$log->info('Acceso a la página de registro', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
+
+// Registrar el acceso a Sentry
+\Sentry\captureMessage("Acceso a la página de registro", \Sentry\Severity::info());
+
+$error = null;
+if (isset($_GET["e"])) {
+    $error = "Hubo un error al procesar tu solicitud.";
+    // Log de error en el registro
+    $log->warning('Intento de registro fallido', [
+        'ip' => $_SERVER['REMOTE_ADDR'], 
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+        'error_message' => $error
+    ]);
+    
+    // Registrar el error en Sentry
+    \Sentry\captureException(new Exception("Intento de registro fallido: " . $error));
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

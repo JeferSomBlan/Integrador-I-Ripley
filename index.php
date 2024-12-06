@@ -1,3 +1,12 @@
+<?php
+// Inicia Sentry en el backend (PHP)
+require_once 'vendor/autoload.php'; // Asegúrate de que Composer esté cargado correctamente
+
+Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']);
+
+/* También puedes capturar mensajes manualmente
+Sentry\captureMessage('Mensaje manual desde PHP');*/
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

@@ -5,8 +5,10 @@ require './PHPMailer/src/PHPMailer.php';
 require './PHPMailer/src/SMTP.php';
 require './PHPMailer/src/Exception.php';
 
-// Al inicio de tu archivo, configura el logger
+// Iniciar Sentry
 require_once 'vendor/autoload.php';
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080', 'traces_sample_rate' => 1.0]); // Reemplaza <tu_dsn_aqui> con tu DSN
+
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -22,70 +24,75 @@ use PHPMailer\PHPMailer\Exception;
 
 // Verificar si la solicitud es POST y si el token CSRF es válido
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verificar el token CSRF
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        $log->error('Error: CSRF token inválido', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
-        die('Error: CSRF token inválido');
-    }
+    try {
+        // Verificar el token CSRF
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            $log->error('Error: CSRF token inválido', ['ip' => $_SERVER['REMOTE_ADDR'], 'user_agent' => $_SERVER['HTTP_USER_AGENT']]);
+            \Sentry\captureMessage('Error: CSRF token inválido', \Sentry\Severity::error());
+            die('Error: CSRF token inválido');
+        }
 
-    // Conectar a la base de datos y procesar el login
-    conectar();
+        // Conectar a la base de datos y procesar el login
+        conectar();
 
-    // Escapar entradas para evitar XSS
-    $identificacion = htmlspecialchars($_POST['identificacion']);
-    $contrasena = $_POST['contrasena'];  // Contraseña ingresada por el usuario
-    $clave = $_POST['clave'];  // Clave adicional si es necesario
+        // Escapar entradas para evitar XSS
+        $identificacion = htmlspecialchars($_POST['identificacion']);
+        $contrasena = $_POST['contrasena'];  // Contraseña ingresada por el usuario
+        $clave = $_POST['clave'];  // Clave adicional si es necesario
 
-    // Evitar inyecciones SQL usando consultas preparadas
-    $sql = "SELECT * FROM usuarios WHERE correo = ? OR dni = ?";
-    if ($stmt = mysqli_prepare($cnx, $sql)) {
-        // Vincular los parámetros para prevenir inyecciones SQL
-        mysqli_stmt_bind_param($stmt, "ss", $identificacion, $identificacion);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
+        // Evitar inyecciones SQL usando consultas preparadas
+        $sql = "SELECT * FROM usuarios WHERE correo = ? OR dni = ?";
+        if ($stmt = mysqli_prepare($cnx, $sql)) {
+            mysqli_stmt_bind_param($stmt, "ss", $identificacion, $identificacion);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
-        if ($usuario = mysqli_fetch_assoc($result)) {
-            // Verificar las contraseñas usando password_verify()
-            if (password_verify($contrasena, $usuario['contrasena']) && password_verify($clave, $usuario['clave'])) {
-                // Almacenar información relevante en la sesión
-                $_SESSION['user_id'] = $usuario['id'];
-                $_SESSION['nombre'] = $usuario['nombre'];
-                $_SESSION['correo'] = $usuario['correo']; // Para reenviar OTP en verificar_otp.php
+            if ($usuario = mysqli_fetch_assoc($result)) {
+                // Verificar las contraseñas usando password_verify()
+                if (password_verify($contrasena, $usuario['contrasena']) && password_verify($clave, $usuario['clave'])) {
+                    $_SESSION['user_id'] = $usuario['id'];
+                    $_SESSION['nombre'] = $usuario['nombre'];
+                    $_SESSION['correo'] = $usuario['correo'];
 
-                // Generar y enviar OTP
-                generarYEnviarOTP($usuario['correo'], $usuario['nombre']);
-                header('Location: verificar_otp.php');
-                exit();
+                    // Generar y enviar OTP
+                    generarYEnviarOTP($usuario['correo'], $usuario['nombre']);
+                    header('Location: verificar_otp.php');
+                    exit();
+                } else {
+                    $log->warning('Credenciales incorrectas', [
+                        'ip' => $_SERVER['REMOTE_ADDR'], 
+                        'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                        'identificacion' => $identificacion
+                    ]);
+                    \Sentry\captureMessage('Credenciales incorrectas', \Sentry\Severity::warning());
+                    echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
+                }
             } else {
-                // Log de error cuando las credenciales son incorrectas
-                $log->warning('Credenciales incorrectas', [
+                $log->warning('Usuario no encontrado', [
                     'ip' => $_SERVER['REMOTE_ADDR'], 
                     'user_agent' => $_SERVER['HTTP_USER_AGENT'],
                     'identificacion' => $identificacion
                 ]);
-                echo "<script>alert('Contraseña o clave incorrecta'); window.location.href = 'login.php';</script>";
+                \Sentry\captureMessage('Usuario no encontrado', \Sentry\Severity::warning());
+                echo "<script>alert('Usuario no encontrado'); window.location.href = 'login.php';</script>";
             }
+
+            mysqli_stmt_close($stmt);
         } else {
-            // Log de error cuando el usuario no es encontrado
-            $log->warning('Usuario no encontrado', [
+            $log->error('Error en la consulta a la base de datos', [
                 'ip' => $_SERVER['REMOTE_ADDR'], 
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'],
-                'identificacion' => $identificacion
+                'user_agent' => $_SERVER['HTTP_USER_AGENT']
             ]);
-            echo "<script>alert('Usuario no encontrado'); window.location.href = 'login.php';</script>";
+            \Sentry\captureMessage('Error en la consulta a la base de datos', \Sentry\Severity::error());
+            echo "<script>alert('Error en la consulta a la base de datos'); window.location.href = 'login.php';</script>";
         }
 
-        mysqli_stmt_close($stmt);
-    } else {
-        // Log de error cuando la consulta falla
-        $log->error('Error en la consulta a la base de datos', [
-            'ip' => $_SERVER['REMOTE_ADDR'], 
-            'user_agent' => $_SERVER['HTTP_USER_AGENT']
-        ]);
-        echo "<script>alert('Error en la consulta a la base de datos'); window.location.href = 'login.php';</script>";
+        desconectar();
+    } catch (Exception $e) {
+        $log->error('Excepción capturada: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        \Sentry\captureException($e);
+        die('Ocurrió un error inesperado. Intente nuevamente más tarde.');
     }
-
-    desconectar();
 }
 
 /**
@@ -94,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function generarYEnviarOTP($correo, $nombre) {
     $otp = rand(100000, 999999);
     $_SESSION['otp'] = $otp;
-    $_SESSION['otp_expiration'] = time() + 300; // 5 minutos de validez
+    $_SESSION['otp_expiration'] = time() + 300;
 
     $mail = new PHPMailer(true);
     try {
@@ -109,7 +116,7 @@ function generarYEnviarOTP($correo, $nombre) {
         $mail->setFrom('jefersoncrack21@gmail.com', 'Ripley');
         $mail->addAddress($correo);
         $mail->isHTML(true);
-        $mail->CharSet = 'UTF-8'; // Configura UTF-8 para el contenido del correo
+        $mail->CharSet = 'UTF-8';
         $mail->Subject = 'Código de Verificación (Ncrypt)';
         $mail->Body = "
             <div style='font-family: Arial, sans-serif; color: #333;'>
@@ -125,6 +132,7 @@ function generarYEnviarOTP($correo, $nombre) {
 
         $mail->send();
     } catch (Exception $e) {
+        \Sentry\captureException($e);
         echo "<script>alert('Error al enviar el correo: {$mail->ErrorInfo}'); window.location.href = 'login.php';</script>";
         exit();
     }
