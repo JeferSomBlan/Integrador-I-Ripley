@@ -2,33 +2,54 @@
 session_start();
 require '../util/conexionMysql.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['token'];
-    $nueva_contrasena = password_hash($_POST['nueva_contrasena'], PASSWORD_BCRYPT);
+// Incluir el autoload de Composer para Sentry
+require_once '../vendor/autoload.php';
 
-    conectar();
-    $sql = "SELECT * FROM usuarios WHERE token_recuperacion = '$token' AND token_expiracion > NOW()";
-    $resultado = consultar($sql);
+// Iniciar Sentry
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']);
 
-    if (count($resultado) === 1) {
-        $user_id = $resultado[0]['id'];
-        
-        // Actualizar la contraseña y eliminar el token
-        $sql_update = "UPDATE usuarios SET contrasena = '$nueva_contrasena', token_recuperacion = NULL, token_expiracion = NULL WHERE id = $user_id";
-        ejecutar($sql_update);
+use Sentry\Severity;
 
-        // Enviar un mensaje de éxito en JavaScript
-        echo "<script>window.onload = function() { showSuccessModal(); }</script>";
+try {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['token'];
+        $nueva_contrasena = password_hash($_POST['nueva_contrasena'], PASSWORD_BCRYPT);
+
+        conectar();
+        $sql = "SELECT * FROM usuarios WHERE token_recuperacion = '$token' AND token_expiracion > NOW()";
+        $resultado = consultar($sql);
+
+        if (count($resultado) === 1) {
+            $user_id = $resultado[0]['id'];
+
+            // Actualizar la contraseña y eliminar el token
+            $sql_update = "UPDATE usuarios SET contrasena = '$nueva_contrasena', token_recuperacion = NULL, token_expiracion = NULL WHERE id = $user_id";
+            ejecutar($sql_update);
+
+            // Registrar el evento de actualización exitosa en Sentry
+            \Sentry\captureMessage("Contraseña actualizada exitosamente para el usuario ID: $user_id", Severity::info());
+
+            // Enviar un mensaje de éxito en JavaScript
+            echo "<script>window.onload = function() { showSuccessModal(); }</script>";
+        } else {
+            // Registrar intento inválido de restablecimiento en Sentry
+            \Sentry\captureMessage("Intento fallido de restablecimiento de contraseña con token: $token", Severity::warning());
+
+            echo "<script>alert('Token inválido o expirado.'); window.location.href = 'recuperar_contrasena.php';</script>";
+        }
+
+        desconectar();
     } else {
-        echo "<script>alert('Token inválido o expirado.'); window.location.href = 'recuperar_contrasena.php';</script>";
+        // Mostrar formulario si el método es GET
+        $token = $_GET['token'] ?? '';
     }
-
-    desconectar();
-} else {
-    // Mostrar formulario si el método es GET
-    $token = $_GET['token'] ?? '';
+} catch (Exception $e) {
+    // Capturar cualquier excepción no manejada y registrarla en Sentry
+    \Sentry\captureException($e);
+    echo "<script>alert('Ocurrió un error en el servidor.'); window.location.href = 'recuperar_contrasena.php';</script>";
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>

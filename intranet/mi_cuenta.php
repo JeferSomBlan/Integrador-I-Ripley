@@ -1,9 +1,10 @@
 <?php
 session_start();
+include_once '../util/conexionMysql.php';
 
-// Incluir Monolog
+// Incluir Sentry y Monolog
 require_once '../vendor/autoload.php';
-
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']);
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -13,59 +14,64 @@ $logDir = __DIR__ . '/logs';
 
 // Asegurarse de que el directorio de logs exista
 if (!file_exists($logDir)) {
-    mkdir($logDir, 0777, true); // Crear la carpeta si no existe
+    mkdir($logDir, 0777, true);
 }
+$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::DEBUG));
 
-// Configurar el handler para escribir los logs de acceso
-$log->pushHandler(new StreamHandler($logDir . '/app.log', Logger::DEBUG)); // Registrar todos los mensajes (INFO, WARNING, ERROR)
-
-// Verificar si el usuario está autenticado
+// Verificar que el usuario está autenticado
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-include_once '../util/conexionMysql.php';
-
-// Conectar a la base de datos y obtener la información del usuario
-$user_id = $_SESSION['user_id'];
-conectar();
-
-// Usar una consulta preparada para evitar inyección SQL
-$sql = "SELECT * FROM usuarios WHERE id = ?";
-if ($stmt = mysqli_prepare($cnx, $sql)) {
-    mysqli_stmt_bind_param($stmt, "i", $user_id); // 'i' para enteros
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $usuario = mysqli_fetch_assoc($result);
-    mysqli_stmt_close($stmt);
-
-    // Verificar si el usuario se cargó correctamente
-    if ($usuario) {
-        // Registrar el evento de carga de perfil
-        $log->info('Perfil cargado exitosamente', [
-            'user_id' => $user_id,
-            'nombre' => $usuario['nombre'],
-            'correo' => $usuario['correo']
-        ]);
-    } else {
-        // Registrar el error si no se encuentra el usuario
-        $log->error('Usuario no encontrado', [
-            'user_id' => $user_id
-        ]);
-    }
-
-} else {
-    // Registrar el error si no se puede obtener la información del usuario
-    $log->error('Error al obtener datos del usuario', [
-        'user_id' => $user_id,
-        'error_message' => 'Error en la consulta SQL'
-    ]);
-    echo "Error al obtener datos del usuario.";
-    exit();
+// Generar un token CSRF si no existe
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-desconectar();
+try {
+    // Conectar a la base de datos y obtener la información del usuario
+    $user_id = $_SESSION['user_id'];
+    conectar();
+
+    $sql = "SELECT * FROM usuarios WHERE id = ?";
+    if ($stmt = mysqli_prepare($cnx, $sql)) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id); // 'i' para enteros
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $usuario = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
+
+        if ($usuario) {
+            // Registrar el evento de carga de perfil
+            $log->info('Perfil cargado exitosamente', [
+                'user_id' => $user_id,
+                'nombre' => $usuario['nombre'],
+                'correo' => $usuario['correo']
+            ]);
+            \Sentry\captureMessage("Perfil cargado exitosamente para el usuario ID: $user_id.");
+        } else {
+            // Registrar el error si no se encuentra el usuario
+            $log->error('Usuario no encontrado', ['user_id' => $user_id]);
+            \Sentry\captureException(new Exception("Usuario no encontrado para el ID: $user_id."));
+            throw new Exception("Error: Usuario no encontrado.");
+        }
+    } else {
+        // Registrar el error si la consulta SQL falla
+        $log->error('Error al obtener datos del usuario', [
+            'user_id' => $user_id,
+            'error_message' => 'Error en la consulta SQL'
+        ]);
+        \Sentry\captureException(new Exception("Error en la consulta SQL para el usuario ID: $user_id."));
+        throw new Exception("Error al obtener datos del usuario.");
+    }
+
+    desconectar();
+} catch (Exception $e) {
+    \Sentry\captureException($e); // Capturar la excepción en Sentry
+    echo "Ocurrió un error, por favor inténtelo más tarde.";
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -156,6 +162,7 @@ desconectar();
             <?php endif; ?>
 
             <form action="actualizar_perfil.php" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="nombre">Nombre</label>

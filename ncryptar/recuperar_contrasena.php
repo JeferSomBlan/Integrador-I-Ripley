@@ -1,3 +1,22 @@
+<?php
+session_start();
+
+// Incluir el autoload de Composer para Sentry
+require_once '../vendor/autoload.php';
+
+// Iniciar Sentry
+\Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']);
+
+use Sentry\Severity;
+
+try {
+    // Registrar acceso a la página de recuperación de contraseña
+    \Sentry\captureMessage("Acceso a la página de recuperación de contraseña", Severity::info());
+} catch (Exception $e) {
+    // Capturar cualquier error en la inicialización de Sentry
+    \Sentry\captureException($e);
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -108,6 +127,14 @@
                 if (data.success) {
                     const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
                     modal.show();
+
+                    // Registrar evento en Sentry: Enlace enviado
+                    fetch('sentry_logger.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ event: 'Recuperación enviada', email: document.getElementById('correo').value })
+                    });
+
                     setTimeout(() => {
                         modal.hide();
                         window.location.href = '../login.php';
@@ -116,7 +143,16 @@
                     alert(data.message);
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+
+                // Registrar error en Sentry
+                fetch('sentry_logger.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event: 'Error al enviar enlace de recuperación', error })
+                });
+            });
         });
     </script>
 </body>
