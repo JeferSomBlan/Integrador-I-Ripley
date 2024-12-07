@@ -6,7 +6,7 @@ $directories = [
         'days' => 30 // Días de antigüedad para eliminar
     ],
     [
-        'path' => __DIR__ . '../logs', // Directorio de logs
+        'path' => __DIR__ . '/logs', // Directorio de logs
         'days' => 15 // Días de antigüedad para eliminar
     ],
 ];
@@ -23,6 +23,11 @@ function cleanOldFiles($directory, $days) {
     }
 
     $files = glob($directory . '/*'); // Obtener todos los archivos en el directorio
+    if (empty($files)) {
+        $errors[] = "El directorio está vacío o no contiene archivos: $directory";
+        return;
+    }
+
     $now = time();
     $timeLimit = $days * 24 * 60 * 60; // Convertir días a segundos
 
