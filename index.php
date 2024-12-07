@@ -180,6 +180,14 @@ Sentry\captureMessage('Mensaje manual desde PHP');*/
         </div>
     </div>
 
+    <div class="container mt-5">
+        <h1 class="text-center">Enviar Correos</h1>
+        <form method="POST" action="enviar_correo.php">
+            <button type="submit" name="enviar_individual" class="btn btn-primary btn-lg w-100 mb-3">Enviar Correos Personalizados</button>
+            <button type="submit" name="enviar_masivo" class="btn btn-success btn-lg w-100">Enviar Correo Masivo</button>
+        </form>
+    </div>
+
     <!-- Modal Carrito -->
     <div class="modal" id="carritoModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
