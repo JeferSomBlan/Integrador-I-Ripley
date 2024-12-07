@@ -1,10 +1,10 @@
 <?php
 
 // Incluir archivo de configuración de la base de datos
-include_once 'bd_config.php';  // Asegúrate de que la ruta a 'bd_config.php' sea correcta
+include_once 'bd_config.php';  // Asegúrate de que la ruta sea correcta
 
 // Incluir Monolog para logging
-require_once __DIR__ . '/../vendor/autoload.php';  // Asegúrate de que la ruta sea correcta para tu estructura de carpetas
+require_once __DIR__ . '/../vendor/autoload.php';
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -12,34 +12,35 @@ use Monolog\Handler\StreamHandler;
 $log = new Logger('conexion_log');
 $logDir = __DIR__ . '/logs';
 
-// Asegurarse de que el directorio de logs exista
+// Asegurarse de que el directorio de logs exista y sea accesible
 if (!file_exists($logDir)) {
-    mkdir($logDir, 0777, true);  // Crear la carpeta si no existe
+    if (!mkdir($logDir, 0777, true)) {
+        die("No se pudo crear el directorio de logs: $logDir");
+    }
 }
 
 // Configurar el handler para el archivo de log
-$log->pushHandler(new StreamHandler($logDir . '/conexion.log', Logger::DEBUG)); // Registrar todo tipo de eventos
+$logFile = $logDir . '/conexion.log';
+$log->pushHandler(new StreamHandler($logFile, Logger::DEBUG)); // Registrar todo tipo de eventos
 
-$cnx = '';  // Variable para la conexión
+$cnx = null;  // Variable para la conexión
 
 // Conexión a la base de datos
 function conectar() {
     global $cnx, $log;
 
-    // Intentamos la conexión a la base de datos utilizando las constantes definidas en 'bd_config.php'
-    $cnx = mysqli_connect(HOST, USER, PASS, DATABASE, PORT);
+    // Intentar la conexión a la base de datos
+    $cnx = @mysqli_connect(HOST, USER, PASS, DATABASE, PORT);
 
-    // Verificar si la conexión fue exitosa
-    if (mysqli_connect_errno()) {
-        // Registrar el error en el log
+    if (!$cnx) {
+        // Registrar el error de conexión
         $log->error('Error de conexión a la base de datos', [
             'error_code' => mysqli_connect_errno(),
             'error_message' => mysqli_connect_error()
         ]);
-        // Mostrar el error y terminar el script
         die("Error de conexión: " . mysqli_connect_error());
     } else {
-        // Registrar la conexión exitosa
+        // Registrar conexión exitosa
         $log->info('Conexión exitosa a la base de datos', [
             'host' => HOST,
             'database' => DATABASE
@@ -47,18 +48,22 @@ function conectar() {
     }
 
     // Configurar el conjunto de caracteres
-    mysqli_query($cnx, "set names utf8");
+    if (!mysqli_set_charset($cnx, 'utf8')) {
+        $log->warning('No se pudo establecer el conjunto de caracteres UTF-8', [
+            'error_message' => mysqli_error($cnx)
+        ]);
+    }
 }
 
 // Desconexión de la base de datos
 function desconectar() {
     global $cnx, $log;
 
-    // Verificamos si la conexión existe antes de intentar cerrarla
     if ($cnx) {
         mysqli_close($cnx);
-        // Registrar la desconexión
         $log->info('Conexión cerrada con éxito');
+    } else {
+        $log->warning('Intento de desconexión sin una conexión activa');
     }
 }
 
@@ -66,12 +71,15 @@ function desconectar() {
 function consultar($query) {
     global $cnx, $log;
 
-    // Registrar la consulta SQL que se está ejecutando
+    if (!$cnx) {
+        $log->error('No se puede ejecutar consulta sin una conexión activa', ['query' => $query]);
+        return [];
+    }
+
     $log->debug('Ejecutando consulta', ['query' => $query]);
 
-    $result = mysqli_query($cnx, $query);
+    $result = @mysqli_query($cnx, $query);
 
-    // Si la consulta no es válida, registrar el error y retornar un array vacío
     if (!$result) {
         $log->error('Error en la consulta SQL', [
             'query' => $query,
@@ -80,17 +88,14 @@ function consultar($query) {
         return [];
     }
 
-    $lista = array();
+    $lista = [];
     while ($registro = mysqli_fetch_assoc($result)) {
         $lista[] = $registro;
     }
 
-    mysqli_free_result($result);  // Liberar el resultado
-    unset($registro);
+    mysqli_free_result($result);
 
-    // Registrar el número de resultados obtenidos
-    $log->debug('Consulta ejecutada con éxito', ['num_results' => count($lista)]);
-
+    $log->info('Consulta ejecutada con éxito', ['num_results' => count($lista)]);
     return $lista;
 }
 
@@ -98,12 +103,15 @@ function consultar($query) {
 function ejecutar($query) {
     global $cnx, $log;
 
-    // Registrar la operación SQL que se está ejecutando
+    if (!$cnx) {
+        $log->error('No se puede ejecutar operación sin una conexión activa', ['query' => $query]);
+        return false;
+    }
+
     $log->debug('Ejecutando operación SQL', ['query' => $query]);
 
-    $result = mysqli_query($cnx, $query);
+    $result = @mysqli_query($cnx, $query);
 
-    // Si la operación falla, registrar el error y retornar false
     if (!$result) {
         $log->error('Error en la operación SQL', [
             'query' => $query,
@@ -112,7 +120,6 @@ function ejecutar($query) {
         return false;
     }
 
-    // Registrar el éxito de la operación
-    $log->debug('Operación SQL ejecutada con éxito');
+    $log->info('Operación SQL ejecutada con éxito');
     return $result;
 }
