@@ -20,29 +20,74 @@ function configurarMailer() {
     $mail->Password = 'lcybrrzzxygsxcpd'; // Cambia por tu contraseña
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
-    $mail->setFrom('jefersoncrack21@gmail.com', 'Tu Nombre o Empresa');
+    $mail->setFrom('jefersoncrack21@gmail.com', 'Ripley - Facturación');
     $mail->isHTML(true); // Activar contenido HTML
     $mail->CharSet = 'UTF-8'; // Para manejar caracteres especiales
     return $mail;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Enviar correos personalizados
+    $usuarios = consultar("SELECT nombre, correo, direccion, telefono, dni FROM usuarios");
+
+    // Enviar boletas personalizadas
     if (isset($_POST['enviar_individual'])) {
-        $usuarios = consultar("SELECT nombre, correo FROM usuarios");
         $errores = [];
         $enviados = 0;
 
         foreach ($usuarios as $usuario) {
             try {
                 $mail = configurarMailer();
+
+                // Generar un número de boleta aleatorio
+                $numeroBoleta = rand(100000, 999999);
+
                 $mail->addAddress($usuario['correo']);
-                $mail->Subject = 'Correo Personalizado';
+                $mail->Subject = "Boleta Electrónica N° $numeroBoleta - Ripley";
                 $mail->Body = "
-                    <h2>Hola, {$usuario['nombre']}!</h2>
-                    <p>Este es un correo personalizado solo para ti.</p>
-                    <p>Gracias por ser parte de nuestra comunidad.</p>
+                    <div style='font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+                        <div style='text-align: center; margin-bottom: 20px;'>
+                            <img src='cid:logoRipley' alt='Ripley' style='width: 150px; height: auto;'>
+                        </div>
+                        <h1 style='text-align: center; color: #333;'>Boleta Electrónica</h1>
+                        <h3 style='text-align: center; color: #777;'>N° $numeroBoleta</h3>
+                        <hr style='border: 0; border-top: 1px solid #ddd; margin: 20px 0;'>
+                        <p style='text-align: center; font-size: 16px; color: #555;'>
+                            Estimado(a) <strong>{$usuario['nombre']}</strong>,<br>
+                            Gracias por confiar en nosotros. A continuación, te presentamos los detalles de tu compra:
+                        </p>
+                        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                            <tr>
+                                <th style='text-align: left; padding: 8px; background-color: #f2f2f2;'>DNI:</th>
+                                <td style='padding: 8px;'>{$usuario['dni']}</td>
+                            </tr>
+                            <tr>
+                                <th style='text-align: left; padding: 8px; background-color: #f2f2f2;'>Dirección:</th>
+                                <td style='padding: 8px;'>{$usuario['direccion']}</td>
+                            </tr>
+                            <tr>
+                                <th style='text-align: left; padding: 8px; background-color: #f2f2f2;'>Teléfono:</th>
+                                <td style='padding: 8px;'>{$usuario['telefono']}</td>
+                            </tr>
+                        </table>
+                        <p style='text-align: center; font-size: 16px; color: #555;'>
+                            Puedes descargar tu boleta y verificar tus transacciones accediendo a nuestra plataforma en línea.
+                        </p>
+                        <div style='text-align: center; margin-top: 20px;'>
+                            <a href='https://ripley.com/mis-compras' 
+                                style='background-color: #ff4500; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;'>
+                                Ver Mis Compras
+                            </a>
+                        </div>
+                        <p style='text-align: center; margin-top: 20px; font-size: 14px; color: #777;'>
+                            Si tienes alguna consulta, no dudes en contactarnos.<br>
+                            Equipo Ripley.
+                        </p>
+                    </div>
                 ";
+
+                // Adjuntar logo de Ripley como recurso embebido
+                $mail->addEmbeddedImage('img/logo/ripley_logo.png', 'logoRipley');
+
                 $mail->send();
                 $enviados++;
             } catch (Exception $e) {
@@ -50,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        echo "<h3>Correos enviados: $enviados</h3>";
+        echo "<h3>Boletas enviadas: $enviados</h3>";
         if (!empty($errores)) {
             echo "<h4>Errores:</h4><ul>";
             foreach ($errores as $error) {
@@ -60,26 +105,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Enviar correos masivos
+    // Enviar correo masivo
     if (isset($_POST['enviar_masivo'])) {
-        $usuarios = consultar("SELECT correo FROM usuarios");
-        $correos = array_column($usuarios, 'correo'); // Extraer solo los correos
-
         try {
             $mail = configurarMailer();
-            foreach ($correos as $correo) {
-                $mail->addBCC($correo); // Usamos BCC para enviar el mismo correo a todos
-            }
-            $mail->Subject = 'Correo Masivo';
+            $mail->Subject = "¡Grandes Ofertas en Ripley!";
             $mail->Body = "
-                <h2>Hola a todos!</h2>
-                <p>Este es un correo masivo para todos nuestros usuarios.</p>
-                <p>Gracias por ser parte de nuestra comunidad.</p>
+                <div style='font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;'>
+                    <h1 style='text-align: center; color: #333;'>¡No te pierdas nuestras ofertas!</h1>
+                    <p style='text-align: center; font-size: 16px; color: #555;'>
+                        Visita nuestra página y descubre promociones increíbles en tus productos favoritos.
+                    </p>
+                    <div style='text-align: center; margin-top: 20px;'>
+                        <a href='https://ripley.com/ofertas' 
+                            style='background-color: #ff4500; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;'>
+                            Ir a Ofertas
+                        </a>
+                    </div>
+                </div>
             ";
+
+            foreach ($usuarios as $usuario) {
+                $mail->addAddress($usuario['correo']);
+            }
+
             $mail->send();
-            echo "<h3>Correo masivo enviado a " . count($correos) . " usuarios</h3>";
+            echo "<h3>Correo masivo enviado a todos los usuarios registrados.</h3>";
         } catch (Exception $e) {
-            echo "<h4>Error al enviar el correo masivo: {$mail->ErrorInfo}</h4>";
+            echo "<h4>Error al enviar correo masivo: {$e->getMessage()}</h4>";
         }
     }
 }
