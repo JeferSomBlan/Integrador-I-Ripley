@@ -4,8 +4,16 @@ require_once 'vendor/autoload.php'; // Asegúrate de que Composer esté cargado 
 
 Sentry\init(['dsn' => 'https://50546abde49ec9c76f7562058fe9d492@o4508412475277312.ingest.us.sentry.io/4508417566638080']);
 
-/* También puedes capturar mensajes manualmente
-Sentry\captureMessage('Mensaje manual desde PHP');*/
+try {
+    // Simula una operación que representa la carga de la página.
+    // Aquí puedes agregar lógica que valide que todos los componentes cargaron correctamente, si aplica.
+    Sentry\captureMessage('La página index.html se cargó correctamente.');
+} catch (Exception $e) {
+    // Captura cualquier error que ocurra y lo envía a Sentry
+    Sentry\captureException($e);
+    // Puedes agregar un mensaje opcional o realizar alguna acción adicional
+    echo "Hubo un error al cargar la página. Por favor, inténtalo de nuevo más tarde.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
